@@ -12,69 +12,179 @@ datasource db {
   provider = "mysql"
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  posts     Post[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  role      Role     @relation(fields: [roleId], references: [id])
-  roleId    Int
-
-  @@map("users")
-}
-
 model Role {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  users     User[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  permissions Permission[]
+  id    String @id @default(uuid())
+  name  String @unique // admin, editor, author, buyer
+  users User[]
 
   @@map("roles")
 }
 
-model Permission {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  roles     Role[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model User {
+  id            String   @id @default(uuid())
+  name          String?
+  email         String   @unique
+  password      String
+  profile_image String?
+  bio           String?  @db.Text
+  role_id       String
+  role          Role     @relation(fields: [role_id], references: [id])
+  status        String? // active, suspended
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
-  @@map("permissions")
+  units           Unit[]
+  project_updates ProjectUpdate[]
+  blogs           Blog[]
+  history         History[]
+
+  @@map("users")
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String? @db.Text
-  published Boolean @default(false)
-  author    User    @relation(fields: [authorId], references: [id])
-  authorId  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  postCategories PostCategory[]
+model Project {
+  id                  String    @id @default(uuid())
+  title               String
+  slug                String    @unique
+  location            String?
+  type                String? // residential, commercial, mixed
+  status              String? // upcoming, ongoing, completed
+  start_date          DateTime? @db.Date
+  expected_completion DateTime? @db.Date
+  total_units         Int?
+  hero_image          String?
+  description         String?   @db.Text
+  meta_title          String?
+  meta_description    String?   @db.Text
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
 
-  @@map("posts")
+  units           Unit[]
+  project_updates ProjectUpdate[]
+
+  @@map("projects")
 }
 
-model Category {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  posts     PostCategory[]
+model Unit {
+  id          String   @id @default(uuid())
+  project_id  String
+  project     Project  @relation(fields: [project_id], references: [id])
+  unit_number String
+  type        String? // apartment, shop
+  floor       String?
+  size_sqft   Float?
+  price       Decimal?
+  status      String? // available, booked, sold
+  owner_id    String?
+  owner       User?    @relation(fields: [owner_id], references: [id])
+  created_at  DateTime @default(now())
 
-  @@map("categories")
+  @@map("units")
 }
 
-model PostCategory {
-  id        Int      @id @default(autoincrement())
-  post      Post     @relation(fields: [postId], references: [id])
-  postId    Int
-  category  Category @relation(fields: [categoryId], references: [id])
-  categoryId Int
-  @@map("post_categories")
+model ProjectUpdate {
+  id                  String   @id @default(uuid())
+  project_id          String
+  project             Project  @relation(fields: [project_id], references: [id])
+  title               String
+  description         String?  @db.Text
+  progress_percentage Int? // 0 - 100
+  visibility          String? // public, private
+  created_by          String
+  creator             User     @relation(fields: [created_by], references: [id])
+  created_at          DateTime @default(now())
+
+  images ProjectUpdateImage[]
+
+  @@map("project_updates")
+}
+
+model ProjectUpdateImage {
+  id        String        @id @default(uuid())
+  update_id String
+  update    ProjectUpdate @relation(fields: [update_id], references: [id])
+  image_url String
+
+  @@map("project_update_images")
+}
+
+model Blog {
+  id                String       @id @default(uuid())
+  title             String
+  slug              String       @unique
+  short_description String?      @db.Text
+  content           String?      @db.Text
+  meta_title        String?
+  meta_description  String?      @db.Text
+  hero_image        String?
+  status            String? // draft, published
+  author_id         String
+  author            User         @relation(fields: [author_id], references: [id])
+  category_id       String
+  category          BlogCategory @relation(fields: [category_id], references: [id])
+  created_at        DateTime     @default(now())
+  updated_at        DateTime     @updatedAt
+  published_at      DateTime?
+
+  tags BlogTag[]
+
+  @@map("blogs")
+}
+
+model BlogCategory {
+  id    String @id @default(uuid())
+  name  String
+  slug  String @unique
+  blogs Blog[]
+
+  @@map("blog_categories")
+}
+
+model Tag {
+  id    String    @id @default(uuid())
+  name  String
+  slug  String    @unique
+  blogs BlogTag[]
+
+  @@map("tags")
+}
+
+model BlogTag {
+  blog_id String
+  blog    Blog   @relation(fields: [blog_id], references: [id])
+  tag_id  String
+  tag     Tag    @relation(fields: [tag_id], references: [id])
+
+  @@id([blog_id, tag_id])
+  @@map("blog_tags")
+}
+
+model Page {
+  id               String   @id @default(uuid())
+  title            String
+  slug             String   @unique
+  content          String?  @db.Text
+  meta_title       String?
+  meta_description String?  @db.Text
+  og_title         String?
+  og_description   String?  @db.Text
+  og_image         String?
+  status           String? // draft, published
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  @@map("pages")
+}
+
+model History {
+  id          String   @id @default(uuid())
+  entity_type String // project, unit, blog, page, user, update
+  entity_id   String
+  field_name  String
+  old_value   String?  @db.Text
+  new_value   String?  @db.Text
+  changed_by  String
+  user        User     @relation(fields: [changed_by], references: [id])
+  created_at  DateTime @default(now())
+
+  @@map("history")
 }
