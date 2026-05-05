@@ -77,6 +77,3 @@ export async function PUT(
         return NextResponse.json({ error }, { status: 500 });
     }
 }
-
-
-export default { GET, PATCH, PUT, DELETE };
