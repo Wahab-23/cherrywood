@@ -149,12 +149,13 @@ model Tag {
 }
 
 model BlogTag {
+  id      String @id @default(uuid())
   blog_id String
   blog    Blog   @relation(fields: [blog_id], references: [id])
   tag_id  String
   tag     Tag    @relation(fields: [tag_id], references: [id])
 
-  @@id([blog_id, tag_id])
+  @@unique([blog_id, tag_id])
   @@map("blog_tags")
 }
 

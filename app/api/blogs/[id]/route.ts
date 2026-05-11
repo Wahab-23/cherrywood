@@ -1,6 +1,54 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+//How sent request from postman to get blog
+//Method : GET
+//URL : http://localhost:3000/api/blogs/1
+//Headers : 
+//Key : Content-Type
+//Value : application/json
+//Body : 
+//Key : id
+//Value : 1
+
+//How sent request from postman to update blog
+//Method : PATCH
+//URL : http://localhost:3000/api/blogs/1
+//Headers : 
+//Key : Content-Type
+//Value : application/json
+//Body : 
+//Key : id
+//Value : 1
+//Key : title
+//Value : Title Updated
+//Key : content
+//Value : Content Updated
+
+//How sent request from postman to delete blog
+//Method : DELETE
+//URL : http://localhost:3000/api/blogs/1
+//Headers : 
+//Key : Content-Type
+//Value : application/json
+//Body : 
+//Key : id
+//Value : 1
+
+//How sent request from postman to update blog
+//Method : PUT
+//URL : http://localhost:3000/api/blogs/1
+//Headers : 
+//Key : Content-Type
+//Value : application/json
+//Body : 
+//Key : id
+//Value : 1
+//Key : title
+//Value : Title Updated
+//Key : content
+//Value : Content Updated
+
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }

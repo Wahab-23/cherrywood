@@ -7,8 +7,7 @@ export async function GET(request: NextRequest) {
         const page = searchParams.get("page") || 1;
         const limit = searchParams.get("limit") || 10;
         const search = searchParams.get("search") || "";
-        const category = searchParams.get("category") || "";
-        const blogs = await prisma.blog.findMany({
+        const projects = await prisma.project.findMany({
             take: Number(limit),
             skip: (Number(page) - 1) * Number(limit),
             orderBy: { created_at: "desc" },
@@ -17,53 +16,32 @@ export async function GET(request: NextRequest) {
                     {
                         OR: [
                             { title: { contains: search } },
-                            { content: { contains: search } },
-                        ],
-                    },
-                    category ? {
-                        category: {
-                            name: { equals: category },
-                        },
-                    } : {},
+                            { description: { contains: search } },
+                        ]
+                    }
                 ],
             },
             select: {
                 id: true,
                 title: true,
                 slug: true,
-                short_description: true,
                 hero_image: true,
                 created_at: true,
-                status: true,
-                category: {
-                    select: {
-                        id: true,
-                        name: true,
-                        slug: true,
-                    },
-                },
-                author: {
-                    select: {
-                        id: true,
-                        name: true,
-                        profile_image: true,
-                    },
-                },
             },
         });
-        const count = await prisma.blog.count();
+        const count = await prisma.project.count();
         return NextResponse.json({
             success: true,
-            data: blogs,
+            data: projects,
             page,
             limit,
             totalPages: Math.ceil(count / Number(limit)),
-            totalBlogs: count,
-            message: "Blogs fetched successfully",
+            totalProjects: count,
+            message: "Projects fetched successfully",
         });
     } catch (error: any) {
-        return NextResponse.json({ 
-            success: false, 
+        return NextResponse.json({
+            success: false,
             message: error.message || "Internal Server Error",
             error: process.env.NODE_ENV === "development" ? error : undefined
         }, { status: 500 });
@@ -73,11 +51,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const { ...data } = await request.json();
-        const blog = await prisma.blog.create({ data });
-        return NextResponse.json(blog);
+        const project = await prisma.project.create({ data });
+        return NextResponse.json(project);
     } catch (error: any) {
-        return NextResponse.json({ 
-            success: false, 
+        return NextResponse.json({
+            success: false,
             message: error.message || "Internal Server Error",
             error: process.env.NODE_ENV === "development" ? error : undefined
         }, { status: 500 });
