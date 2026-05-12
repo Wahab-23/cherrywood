@@ -1,58 +1,14 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-// How to send request from postman to get unit
-// Method : GET
-// URL : http://localhost:3000/api/projects/Unit/1
-// Headers : 
-// Key : Content-Type
-// Value : application/json
-// Body : 
-// Key : id
-// Value : 1
-
-// How to send request from postman to update unit
-// Method : PATCH
-// URL : http://localhost:3000/api/projects/Unit/1
-// Headers : 
-// Key : Content-Type
-// Value : application/json
-// Body : 
-// Key : id
-// Value : 1
-// Key : title
-// Value : Title Updated
-// Key : content
-// Value : Content Updated
-
-// How to send request from postman to delete unit
-// Method : DELETE
-// URL : http://localhost:3000/api/projects/Unit/1
-// Headers : 
-// Key : Content-Type
-// Value : application/json
-// Body : 
-// Key : id
-// Value : 1
-
-// How to send request from postman to update unit
-// Method : PUT
-// URL : http://localhost:3000/api/projects/Unit/1
-// Headers : 
-// Key : Content-Type
-// Value : application/json
-// Body : 
-// Key : id
-// Value : 1
-// Key : title
-// Value : Title Updated
-// Key : content
-// Value : Content Updated
+import { requirePermission } from "@/lib/guards";
 
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const auth = requirePermission(request, "units", "read");
+    if ("error" in auth) return auth.error;
+
     try {
         const { id } = await params;
         const unit = await prisma.unit.findUnique({
@@ -64,12 +20,12 @@ export async function GET(
         });
 
         if (!unit) {
-            return NextResponse.json({ error: "Unit not found" }, { status: 404 });
+            return NextResponse.json({ success: false, error: "Unit not found" }, { status: 404 });
         }
 
-        return NextResponse.json(unit);
-    } catch (error) {
-        return NextResponse.json({ error }, { status: 500 });
+        return NextResponse.json({ success: true, data: unit });
+    } catch (error: any) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
 
@@ -77,16 +33,25 @@ export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const auth = requirePermission(request, "units", "update");
+    if ("error" in auth) return auth.error;
+
     try {
         const { id } = await params;
         const data = await request.json();
+        
+        // Ensure numeric fields are correctly typed
+        const updateData = { ...data };
+        if (updateData.price) updateData.price = Number(updateData.price);
+        if (updateData.size_sqft) updateData.size_sqft = Number(updateData.size_sqft);
+
         const unit = await prisma.unit.update({
             where: { id },
-            data,
+            data: updateData,
         });
-        return NextResponse.json(unit);
-    } catch (error) {
-        return NextResponse.json({ error }, { status: 500 });
+        return NextResponse.json({ success: true, data: unit });
+    } catch (error: any) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
 
@@ -94,11 +59,14 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const auth = requirePermission(request, "units", "delete");
+    if ("error" in auth) return auth.error;
+
     try {
         const { id } = await params;
         const unit = await prisma.unit.delete({ where: { id } });
-        return NextResponse.json(unit);
-    } catch (error) {
-        return NextResponse.json({ error }, { status: 500 });
+        return NextResponse.json({ success: true, data: unit });
+    } catch (error: any) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }

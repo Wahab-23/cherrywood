@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requirePermission } from "@/lib/guards";
 
 interface Params {
     id: string;
@@ -28,12 +29,12 @@ export async function GET(
         });
 
         if (!project) {
-            return NextResponse.json({ error: "Project not found" }, { status: 404 });
+            return NextResponse.json({ success: false, error: "Project not found" }, { status: 404 });
         }
 
-        return NextResponse.json(project);
-    } catch (error) {
-        return NextResponse.json({ error }, { status: 500 });
+        return NextResponse.json({ success: true, data: project });
+    } catch (error: any) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
 
@@ -41,6 +42,9 @@ export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const auth = requirePermission(request, "projects", "update");
+    if ("error" in auth) return auth.error;
+
     try {
         const { id } = await params;
         const body: ProjectUpdateInput = await request.json();
@@ -56,10 +60,13 @@ export async function PUT(
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: Params }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const auth = requirePermission(request, "projects", "delete");
+    if ("error" in auth) return auth.error;
+
     try {
-        const { id } = params;
+        const { id } = await params;
         const project = await prisma.project.delete({
             where: { id },
         });

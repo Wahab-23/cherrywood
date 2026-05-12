@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requirePermission } from "@/lib/guards";
 
 interface Filter {
     search?: string;
@@ -16,6 +17,9 @@ interface Filter {
 
 //get units
 export async function GET(request: NextRequest) {
+    const auth = requirePermission(request, "units", "read");
+    if ("error" in auth) return auth.error;
+
     try {
         const searchParams = request.nextUrl.searchParams;
         const search = searchParams.get("search");
@@ -30,21 +34,29 @@ export async function GET(request: NextRequest) {
         const updated_at = searchParams.get("updated_at");
 
         const filter: Filter = {};
-        if (search) filter.search = search;
-        if (project_id) filter.project_id = project_id;
-        if (type) filter.type = type;
-        if (status) filter.status = status;
-        if (floor) filter.floor = floor;
-        if (price) filter.price = Number(price);
-        if (size_sqft) filter.size_sqft = Number(size_sqft);
-        if (owner_id) filter.owner_id = owner_id;
-        if (created_at) filter.created_at = created_at;
-        if (updated_at) filter.updated_at = updated_at;
+        // Note: Filter construction might need adjustment for Prisma's where object
+        // but keeping it close to original for now.
+        // Actually, Prisma 'where' doesn't support 'search' directly like this.
+        // I'll fix the filter to be valid Prisma where input.
+        const where: any = {};
+        if (project_id) where.project_id = project_id;
+        if (type) where.type = type;
+        if (status) where.status = status;
+        if (floor) where.floor = floor;
+        if (price) where.price = Number(price);
+        if (size_sqft) where.size_sqft = Number(size_sqft);
+        if (owner_id) where.owner_id = owner_id;
+        if (search) {
+            where.OR = [
+                { unit_number: { contains: search } },
+                { type: { contains: search } },
+            ];
+        }
 
         const page = searchParams.get("page") || 1;
         const limit = searchParams.get("limit") || 10;
         const units = await prisma.unit.findMany({
-            where: filter,
+            where,
             include: {
                 project: true,
                 owner: true,
@@ -53,7 +65,7 @@ export async function GET(request: NextRequest) {
             take: Number(limit),
             orderBy: { created_at: "desc" },
         });
-        const count = await prisma.unit.count({ where: filter });
+        const count = await prisma.unit.count({ where });
         return NextResponse.json({
             success: true,
             data: units,
@@ -74,13 +86,16 @@ export async function GET(request: NextRequest) {
 
 //create unit
 export async function POST(request: NextRequest) {
+    const auth = requirePermission(request, "units", "create");
+    if ("error" in auth) return auth.error;
+
     try {
         const { ...data } = await request.json();
         const unit = await prisma.unit.create({
             data: {
                 ...data,
-                price: Number(data.price),
-                size_sqft: Number(data.size_sqft),
+                price: data.price ? Number(data.price) : undefined,
+                size_sqft: data.size_sqft ? Number(data.size_sqft) : undefined,
             },
             include: {
                 project: true,
@@ -91,7 +106,7 @@ export async function POST(request: NextRequest) {
             success: true,
             data: unit,
             message: "Unit created successfully",
-        });
+        }, { status: 201 });
     } catch (error: any) {
         return NextResponse.json({
             success: false,

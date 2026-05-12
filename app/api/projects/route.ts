@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requirePermission } from "@/lib/guards";
 
 export async function GET(request: NextRequest) {
     try {
@@ -49,10 +50,13 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+    const auth = requirePermission(request, "projects", "create");
+    if ("error" in auth) return auth.error;
+
     try {
         const { ...data } = await request.json();
         const project = await prisma.project.create({ data });
-        return NextResponse.json(project);
+        return NextResponse.json({ success: true, data: project }, { status: 201 });
     } catch (error: any) {
         return NextResponse.json({
             success: false,

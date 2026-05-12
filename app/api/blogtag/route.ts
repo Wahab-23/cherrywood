@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requirePermission } from "@/lib/guards";
 
 interface Filter {
     search?: string;
@@ -34,6 +35,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+    const authResult = requirePermission(request, "tags", "create");
+    if ("error" in authResult) return authResult.error;
     try {
         const { blog_id, tag_id } = await request.json();
         const blogTag = await prisma.blogTag.create({

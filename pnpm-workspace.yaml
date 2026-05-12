@@ -1,3 +1,6 @@
 ignoredBuiltDependencies:
+  - '@prisma/engines'
+  - bcrypt
+  - prisma
   - sharp
   - unrs-resolver

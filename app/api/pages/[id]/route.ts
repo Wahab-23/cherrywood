@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requirePermission } from "@/lib/guards";
 
 interface Params {
     id: string;
@@ -17,22 +18,32 @@ interface PageUpdateInput {
     status?: string;
 }
 
-export async function GET(request: NextRequest, { params }: { params: Params }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<Params> }) {
     try {
+        const { id } = await params;
         const page = await prisma.page.findUnique({
-            where: { id: params.id }
+            where: { id }
         });
+
+        if (!page) {
+            return NextResponse.json({ success: false, error: "Page not found" }, { status: 404 });
+        }
+
         return NextResponse.json({ success: true, data: page });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: process.env.NODE_ENV === "development" ? error : "Internal Server Error" }, { status: 500 });
     }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: Params }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<Params> }) {
+    const auth = requirePermission(request, "pages", "update");
+    if ("error" in auth) return auth.error;
+
     try {
+        const { id } = await params;
         const body: PageUpdateInput = await request.json();
         const page = await prisma.page.update({
-            where: { id: params.id },
+            where: { id },
             data: body
         });
         return NextResponse.json({ success: true, data: page });
@@ -41,10 +52,14 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
     }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: Params }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<Params> }) {
+    const auth = requirePermission(request, "pages", "delete");
+    if ("error" in auth) return auth.error;
+
     try {
+        const { id } = await params;
         const page = await prisma.page.delete({
-            where: { id: params.id }
+            where: { id }
         });
         return NextResponse.json({ success: true, data: page });
     } catch (error: any) {
