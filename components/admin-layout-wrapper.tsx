@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getStoredAuth, clearStoredAuth } from '@/lib/auth-context'
+import { clearStoredUser, setStoredUser } from '@/lib/auth-context'
 
 export function AdminLayoutWrapper({
   children,
@@ -13,15 +13,24 @@ export function AdminLayoutWrapper({
   const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
-    const auth = getStoredAuth()
-    
-    if (!auth) {
-      // No token found, redirect to login
-      clearStoredAuth()
-      router.push('/admin/login')
-    } else {
-      setIsChecking(false)
-    }
+    // Verify auth by checking the httpOnly cookie via API
+    fetch('/api/auth/me')
+      .then(async (res) => {
+        if (res.ok) {
+          const data = await res.json()
+          // Refresh cached user info
+          setStoredUser(data.user)
+          setIsChecking(false)
+        } else {
+          // Cookie invalid or missing — redirect to login
+          clearStoredUser()
+          router.push('/admin/login')
+        }
+      })
+      .catch(() => {
+        clearStoredUser()
+        router.push('/admin/login')
+      })
   }, [router])
 
   if (isChecking) {

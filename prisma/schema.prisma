@@ -67,9 +67,9 @@ model Project {
 }
 
 model Unit {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   project_id  String
-  project     Project  @relation(fields: [project_id], references: [id])
+  project     Project   @relation(fields: [project_id], references: [id])
   unit_number String
   type        String? // apartment, shop
   floor       String?
@@ -77,8 +77,9 @@ model Unit {
   price       Decimal?
   status      String? // available, booked, sold
   owner_id    String?
-  owner       User?    @relation(fields: [owner_id], references: [id])
-  created_at  DateTime @default(now())
+  owner       User?     @relation(fields: [owner_id], references: [id])
+  created_at  DateTime  @default(now())
+  inquiries   Inquiry[]
 
   @@map("units")
 }
@@ -190,4 +191,65 @@ model History {
   created_at  DateTime @default(now())
 
   @@map("history")
+}
+
+model Inquiry {
+  id             String    @id @default(uuid())
+  name           String
+  phone          String
+  email          String
+  preferred_date DateTime? @db.Date
+  message        String?   @db.Text
+  unit_id        String?
+  unit           Unit?     @relation(fields: [unit_id], references: [id])
+  status         String    @default("new") // new, contacted, closed
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+
+  @@map("inquiries")
+}
+
+model AnalyticsSession {
+  id           String              @id @default(uuid())
+  visitorId    String // Hashed IP or Fingerprint
+  userAgent    String?             @db.Text
+  device       String? // mobile, desktop, tablet
+  browser      String?
+  os           String?
+  referrer     String?             @db.Text
+  country      String?
+  city         String?
+  duration     Int                 @default(0) // in seconds
+  pageViews    Int                 @default(1)
+  isConversion Boolean             @default(false)
+  created_at   DateTime            @default(now())
+  updated_at   DateTime            @updatedAt
+  page_views   AnalyticsPageView[]
+  events       AnalyticsEvent[]
+
+  @@map("analytics_sessions")
+}
+
+model AnalyticsPageView {
+  id         String           @id @default(uuid())
+  sessionId  String
+  session    AnalyticsSession @relation(fields: [sessionId], references: [id])
+  url        String           @db.Text
+  title      String?          @db.Text
+  duration   Int              @default(0) // seconds spent on this page
+  created_at DateTime         @default(now())
+
+  @@map("analytics_page_views")
+}
+
+model AnalyticsEvent {
+  id         String           @id @default(uuid())
+  sessionId  String
+  session    AnalyticsSession @relation(fields: [sessionId], references: [id])
+  type       String // 'click', 'form_submission', etc.
+  name       String // 'contact_form', 'download_pdf', etc.
+  metadata   Json?
+  created_at DateTime         @default(now())
+
+  @@map("analytics_events")
 }

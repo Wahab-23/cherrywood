@@ -21,17 +21,17 @@ export default function UnitsPage() {
   ]
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Units</h1>
-          <p className="text-slate-600 mt-2">Manage property units</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Property Units</h1>
+          <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Manage and track available inventory</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add Unit
+            <Button className="rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-50 dark:hover:bg-slate-200 dark:text-slate-900 shadow-lg shadow-slate-200 dark:shadow-none font-black h-11 px-6">
+              <Plus className="w-5 h-5 mr-2" />
+              Add Property Unit
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
@@ -91,28 +91,26 @@ export default function UnitsPage() {
         </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>All Units</CardTitle>
-              <CardDescription>Total: {units.length} units</CardDescription>
-            </div>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                placeholder="Search units..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+      <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+        <CardHeader className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">Inventory Management</CardTitle>
+            <CardDescription className="font-medium">Total: <span className="text-blue-600 font-bold">{units.length}</span> units tracked</CardDescription>
+          </div>
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input
+              placeholder="Search units..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 rounded-xl border-slate-200 h-10 bg-slate-50/50 focus:bg-white transition-all"
+            />
           </div>
         </CardHeader>
         <CardContent>
           <Table>
-            <TableHeader>
-              <TableRow>
+            <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50">
+              <TableRow className="border-b border-slate-50 dark:border-slate-800">
                 <TableHead>Unit #</TableHead>
                 <TableHead>Project</TableHead>
                 <TableHead>Type</TableHead>
@@ -124,17 +122,17 @@ export default function UnitsPage() {
             </TableHeader>
             <TableBody>
               {units.map((unit) => (
-                <TableRow key={unit.id}>
-                  <TableCell className="font-medium">{unit.number}</TableCell>
+                <TableRow key={unit.id} className="border-b border-slate-50 dark:border-slate-800 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                  <TableCell className="font-medium text-slate-900 dark:text-slate-100">{unit.number}</TableCell>
                   <TableCell>{unit.project}</TableCell>
                   <TableCell className="capitalize">{unit.type}</TableCell>
                   <TableCell>{unit.floor}</TableCell>
                   <TableCell>{unit.price}</TableCell>
                   <TableCell>
                     <Badge className={
-                      unit.status === 'available' ? 'bg-green-100 text-green-800' :
-                      unit.status === 'sold' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
+                      unit.status === 'available' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border-green-200 dark:border-green-900/50' :
+                      unit.status === 'sold' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border-red-200 dark:border-red-900/50' :
+                      'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900/50'
                     }>
                       {unit.status}
                     </Badge>

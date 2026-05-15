@@ -2,23 +2,25 @@
 
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { 
-  LayoutDashboard, 
-  Users, 
-  BookOpen, 
-  Briefcase, 
-  FileText, 
-  Box, 
-  LogOut, 
-  UserCircle, 
+import {
+  LayoutDashboard,
+  Users,
+  BookOpen,
+  Briefcase,
+  FileText,
+  Box,
+  LogOut,
+  UserCircle,
+  TrendingUp,
   Settings,
   ChevronRight,
-  Bell
+  Bell,
+  Image as ImageIcon
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { AdminLayoutWrapper } from '@/components/admin-layout-wrapper'
-import { clearStoredAuth, getStoredAuth } from '@/lib/auth-context'
+import { clearStoredUser, getStoredUser } from '@/lib/auth-context'
 import { useState, useEffect } from 'react'
 
 export default function AdminLayout({
@@ -44,25 +46,41 @@ function AdminLayoutContent({
   const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
-    const auth = getStoredAuth()
-    if (auth) {
-      setUser(auth.user)
+    const cachedUser = getStoredUser()
+    if (cachedUser) {
+      setUser(cachedUser)
     }
   }, [])
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setLoggingOut(true)
-    clearStoredAuth()
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } catch {
+      // Ignore errors — we're logging out regardless
+    }
+    clearStoredUser()
     router.push('/admin/login')
   }
 
+  const [openMenus, setOpenMenus] = useState<string[]>(['Dashboard'])
+
   const navItems = [
-    { href: '/admin/n8_nwrr2675/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { 
+      label: 'Dashboard', 
+      icon: LayoutDashboard,
+      href: '/admin/n8_nwrr2675/dashboard',
+      children: [
+        { href: '/admin/n8_nwrr2675/dashboard', label: 'Overview' },
+        { href: '/admin/n8_nwrr2675/dashboard/insights', label: 'Insights' },
+      ]
+    },
     { href: '/admin/n8_nwrr2675/users', label: 'Users', icon: Users },
     { href: '/admin/n8_nwrr2675/blogs', label: 'Blogs', icon: BookOpen },
     { href: '/admin/n8_nwrr2675/projects', label: 'Projects', icon: Briefcase },
     { href: '/admin/n8_nwrr2675/pages', label: 'Pages', icon: FileText },
     { href: '/admin/n8_nwrr2675/units', label: 'Units', icon: Box },
+    { href: '/admin/n8_nwrr2675/media', label: 'Media', icon: ImageIcon },
   ]
 
   const secondaryNavItems = [
@@ -70,21 +88,31 @@ function AdminLayoutContent({
     { href: '/admin/n8_nwrr2675/settings', label: 'Settings', icon: Settings },
   ]
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+  const isActive = (href: string) => pathname === href || (href !== '/admin/n8_nwrr2675/dashboard' && pathname.startsWith(href + '/'))
+  const isParentActive = (item: any) => {
+    if (item.href && isActive(item.href)) return true
+    return item.children?.some((child: any) => isActive(child.href))
+  }
+
+  const toggleMenu = (label: string) => {
+    setOpenMenus(prev => 
+      prev.includes(label) ? prev.filter(i => i !== label) : [...prev, label]
+    )
+  }
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC]">
+    <div className="flex h-screen bg-[#F8FAFC] dark:bg-slate-950 transition-colors duration-300">
       {/* Sidebar */}
-      <aside className="w-72 bg-white border-r border-slate-200 flex flex-col shadow-sm">
+      <aside className="w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shadow-sm transition-colors duration-300">
         {/* Logo/Brand */}
         <div className="p-8">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/20">
               <Box className="text-white w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight">Cherrywood</h1>
-              <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Admin Portal</p>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Cherrywood</h1>
+              <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-widest">Admin Portal</p>
             </div>
           </div>
         </div>
@@ -92,35 +120,79 @@ function AdminLayoutContent({
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto px-4 py-2 space-y-8">
           <div>
-            <p className="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">Main Menu</p>
+            <p className="px-4 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Main Menu</p>
             <nav className="space-y-1.5">
               {navItems.map((item) => {
                 const Icon = item.icon
-                const active = isActive(item.href)
+                const active = isParentActive(item)
+                const hasChildren = item.children && item.children.length > 0
+                const isOpen = openMenus.includes(item.label)
+
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      'flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group',
-                      active
-                        ? 'bg-blue-50 text-blue-600 shadow-sm'
-                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                  <div key={item.label} className="space-y-1">
+                    {hasChildren ? (
+                      <button
+                        onClick={() => toggleMenu(item.label)}
+                        className={cn(
+                          'w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group',
+                          active
+                            ? 'bg-blue-50/50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-400'
+                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon className={cn("w-5 h-5", active ? "text-blue-600 dark:text-blue-400" : "text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white")} />
+                          <span className="font-semibold text-sm">{item.label}</span>
+                        </div>
+                        <ChevronRight className={cn("w-4 h-4 transition-transform duration-200", isOpen && "rotate-90")} />
+                      </button>
+                    ) : (
+                      <Link
+                        href={item.href!}
+                        className={cn(
+                          'flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group',
+                          active
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shadow-sm'
+                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon className={cn("w-5 h-5", active ? "text-blue-600 dark:text-blue-400" : "text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white")} />
+                          <span className="font-semibold text-sm">{item.label}</span>
+                        </div>
+                        {active && <ChevronRight className="w-4 h-4" />}
+                      </Link>
                     )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon className={cn("w-5 h-5", active ? "text-blue-600" : "text-slate-400 group-hover:text-slate-900")} />
-                      <span className="font-semibold text-sm">{item.label}</span>
-                    </div>
-                    {active && <ChevronRight className="w-4 h-4" />}
-                  </Link>
+
+                    {hasChildren && isOpen && (
+                      <div className="ml-9 pl-4 border-l border-slate-100 dark:border-slate-800 space-y-1 mt-1">
+                        {item.children.map((child) => {
+                          const childActive = isActive(child.href)
+                          return (
+                            <Link
+                              key={child.href}
+                              href={child.href}
+                              className={cn(
+                                'block py-2 px-3 rounded-lg text-xs font-bold transition-colors',
+                                childActive
+                                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10'
+                                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                              )}
+                            >
+                              {child.label}
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
                 )
               })}
             </nav>
           </div>
 
           <div>
-            <p className="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">Account</p>
+            <p className="px-4 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Account</p>
             <nav className="space-y-1.5">
               {secondaryNavItems.map((item) => {
                 const Icon = item.icon
@@ -132,12 +204,12 @@ function AdminLayoutContent({
                     className={cn(
                       'flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group',
                       active
-                        ? 'bg-blue-50 text-blue-600 shadow-sm'
-                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shadow-sm'
+                        : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className={cn("w-5 h-5", active ? "text-blue-600" : "text-slate-400 group-hover:text-slate-900")} />
+                      <Icon className={cn("w-5 h-5", active ? "text-blue-600 dark:text-blue-400" : "text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white")} />
                       <span className="font-semibold text-sm">{item.label}</span>
                     </div>
                     {active && <ChevronRight className="w-4 h-4" />}
@@ -149,19 +221,19 @@ function AdminLayoutContent({
         </div>
 
         {/* Footer User Profile */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
           <div className="flex items-center gap-3 p-2 mb-4">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold border-2 border-white shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold border-2 border-white dark:border-slate-800 shadow-sm">
               {user?.name?.charAt(0) || 'A'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-slate-900 truncate">{user?.name || 'Admin User'}</p>
-              <p className="text-[11px] text-slate-500 truncate">{user?.email || 'admin@example.com'}</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user?.name || 'Admin User'}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{user?.email || 'admin@example.com'}</p>
             </div>
           </div>
           <Button
             variant="ghost"
-            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
+            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl"
             onClick={handleLogout}
             disabled={loggingOut}
           >
@@ -174,26 +246,26 @@ function AdminLayoutContent({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
-        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
+        <header className="h-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shrink-0 transition-colors duration-300">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">
-              {navItems.find(i => isActive(i.href))?.label || 
-               secondaryNavItems.find(i => isActive(i.href))?.label || 
-               'Dashboard'}
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+              {navItems.find(i => isActive(i.href))?.label ||
+                secondaryNavItems.find(i => isActive(i.href))?.label ||
+                'Dashboard'}
             </h2>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-900 rounded-full">
+            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-full">
               <Bell className="w-5 h-5" />
             </Button>
-            <div className="h-8 w-[1px] bg-slate-200 mx-2"></div>
+            <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2"></div>
             <Link href="/admin/n8_nwrr2675/profile" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-slate-900">{user?.name || 'Admin'}</p>
-                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">{user?.role?.name || 'Administrator'}</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white">{user?.name || 'Admin'}</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-tight">{user?.roleName || user?.role?.name || 'Administrator'}</p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
-                <UserCircle className="w-6 h-6 text-slate-600" />
+              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+                <UserCircle className="w-6 h-6 text-slate-600 dark:text-slate-400" />
               </div>
             </Link>
           </div>

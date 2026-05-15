@@ -21,16 +21,16 @@ export default function ProjectsPage() {
   ]
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Projects</h1>
-          <p className="text-slate-600 mt-2">Manage real estate projects</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Projects</h1>
+          <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Manage real estate projects</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
+            <Button className="rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-50 dark:hover:bg-slate-200 dark:text-slate-900 shadow-lg shadow-slate-200 dark:shadow-none font-black h-11 px-6">
+              <Plus className="w-5 h-5 mr-2" />
               Create Project
             </Button>
           </DialogTrigger>
@@ -86,28 +86,26 @@ export default function ProjectsPage() {
         </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>All Projects</CardTitle>
-              <CardDescription>Total: {projects.length} projects</CardDescription>
-            </div>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                placeholder="Search projects..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+      <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+        <CardHeader className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">All Active Projects</CardTitle>
+            <CardDescription className="font-medium">Total: <span className="text-blue-600 font-bold">{projects.length}</span> projects</CardDescription>
+          </div>
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input
+              placeholder="Search projects..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 rounded-xl border-slate-200 h-10 bg-slate-50/50 focus:bg-white transition-all"
+            />
           </div>
         </CardHeader>
         <CardContent>
           <Table>
-            <TableHeader>
-              <TableRow>
+            <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50">
+              <TableRow className="border-b border-slate-50 dark:border-slate-800">
                 <TableHead>Title</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Type</TableHead>
@@ -118,12 +116,14 @@ export default function ProjectsPage() {
             </TableHeader>
             <TableBody>
               {projects.map((project) => (
-                <TableRow key={project.id}>
-                  <TableCell className="font-medium">{project.title}</TableCell>
+                <TableRow key={project.id} className="border-b border-slate-50 dark:border-slate-800 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                  <TableCell className="font-medium text-slate-900 dark:text-slate-100">{project.title}</TableCell>
                   <TableCell>{project.location}</TableCell>
                   <TableCell className="capitalize">{project.type}</TableCell>
                   <TableCell>
-                    <Badge className={project.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}>
+                    <Badge className={project.status === 'completed' 
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border-green-200 dark:border-green-900/50' 
+                      : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 border-blue-200 dark:border-blue-900/50'}>
                       {project.status}
                     </Badge>
                   </TableCell>

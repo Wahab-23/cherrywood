@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { getStoredAuth, setStoredAuth } from '@/lib/auth-context'
+import { getStoredUser, setStoredUser } from '@/lib/auth-context'
 import { UserCircle, Mail, Shield, Key, Save, Loader2, CheckCircle2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
@@ -19,11 +19,11 @@ export default function ProfilePage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const auth = getStoredAuth()
-    if (auth) {
-      setUser(auth.user)
-      setName(auth.user.name || '')
-      setEmail(auth.user.email || '')
+    const cachedUser = getStoredUser()
+    if (cachedUser) {
+      setUser(cachedUser)
+      setName(cachedUser.name || '')
+      setEmail(cachedUser.email || '')
     }
   }, [])
 
@@ -33,7 +33,7 @@ export default function ProfilePage() {
     setError('')
     setSuccess(false)
 
-    const auth = getStoredAuth()
+    const auth = getStoredUser()
     if (!auth) return
 
     try {
@@ -41,7 +41,6 @@ export default function ProfilePage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${auth.token}`
         },
         body: JSON.stringify({
           name,
@@ -56,8 +55,8 @@ export default function ProfilePage() {
         throw new Error(data.error || 'Failed to update profile')
       }
 
-      // Update local storage
-      setStoredAuth(auth.token, data.data)
+      // Update cached user info
+      setStoredUser(data.data)
       setUser(data.data)
       setSuccess(true)
       setPassword('')

@@ -9,7 +9,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Plus, Search, Edit, Trash2, Eye, Mail, User, Shield, CheckCircle2, XCircle } from 'lucide-react'
 import { Label } from '@/components/ui/label'
-import { getStoredAuth } from '@/lib/auth-context'
 import Link from 'next/link'
 
 export default function UsersPage() {
@@ -25,13 +24,8 @@ export default function UsersPage() {
 
   const fetchUsers = async () => {
     setLoading(true)
-    const auth = getStoredAuth()
     try {
-      const response = await fetch(`/api/users?search=${searchQuery}`, {
-        headers: {
-          'Authorization': `Bearer ${auth?.token}`
-        }
-      })
+      const response = await fetch(`/api/users?search=${searchQuery}`)
       const data = await response.json()
       if (data.success) {
         setUsers(data.data)
@@ -46,22 +40,22 @@ export default function UsersPage() {
 
   const getRoleColor = (roleName: string) => {
     const role = roleName?.toLowerCase()
-    if (role === 'admin') return 'bg-red-50 text-red-600 border-red-100'
-    if (role === 'editor') return 'bg-blue-50 text-blue-600 border-blue-100'
-    if (role === 'author') return 'bg-green-50 text-green-600 border-green-100'
-    return 'bg-slate-50 text-slate-600 border-slate-100'
+    if (role === 'admin') return 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/30 dark:text-red-400 dark:border-red-900/50'
+    if (role === 'editor') return 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900/50'
+    if (role === 'author') return 'bg-green-50 text-green-600 border-green-100 dark:bg-green-900/30 dark:text-green-400 dark:border-green-900/50'
+    return 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
   }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">User Management</h1>
-          <p className="text-slate-500 font-medium mt-1">Manage platform access, roles and account verification</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">User Management</h1>
+          <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Manage platform access, roles and account verification</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="rounded-xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 font-black h-11 px-6">
+            <Button className="rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-50 dark:hover:bg-slate-200 dark:text-slate-900 shadow-lg shadow-slate-200 dark:shadow-none font-black h-11 px-6">
               <Plus className="w-5 h-5 mr-2" />
               Add New User
             </Button>
@@ -100,7 +94,7 @@ export default function UsersPage() {
                   </select>
                 </div>
               </div>
-              <Button className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 h-12 font-black mt-4 shadow-lg shadow-blue-100">
+              <Button className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-50 dark:hover:bg-slate-200 dark:text-slate-900 h-12 font-black mt-4 shadow-lg shadow-slate-200 dark:shadow-none">
                 Create Account
               </Button>
             </div>
@@ -111,8 +105,8 @@ export default function UsersPage() {
       <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
         <CardHeader className="px-8 py-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <CardTitle className="text-xl font-bold text-slate-900">All System Users</CardTitle>
-            <CardDescription className="font-medium">Total: <span className="text-blue-600 font-bold">{meta?.total || 0}</span> users found</CardDescription>
+            <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">All System Users</CardTitle>
+            <CardDescription className="font-medium text-slate-500 dark:text-slate-400">Total: <span className="text-blue-600 dark:text-blue-400 font-bold">{meta?.total || 0}</span> users found</CardDescription>
           </div>
           <div className="relative w-full md:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -126,14 +120,14 @@ export default function UsersPage() {
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="border-b border-slate-50">
-                <TableHead className="px-8 py-4 font-bold text-slate-900 uppercase tracking-wider text-[11px]">User Profile</TableHead>
-                <TableHead className="py-4 font-bold text-slate-900 uppercase tracking-wider text-[11px]">Email</TableHead>
-                <TableHead className="py-4 font-bold text-slate-900 uppercase tracking-wider text-[11px]">System Role</TableHead>
-                <TableHead className="py-4 font-bold text-slate-900 uppercase tracking-wider text-[11px]">Identity Status</TableHead>
-                <TableHead className="py-4 font-bold text-slate-900 uppercase tracking-wider text-[11px]">Joined Date</TableHead>
-                <TableHead className="px-8 py-4 font-bold text-slate-900 uppercase tracking-wider text-[11px] text-right">Actions</TableHead>
+            <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50">
+              <TableRow className="border-b border-slate-50 dark:border-slate-800">
+                <TableHead className="px-8 py-4 font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px]">User Profile</TableHead>
+                <TableHead className="py-4 font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px]">Email</TableHead>
+                <TableHead className="py-4 font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px]">System Role</TableHead>
+                <TableHead className="py-4 font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px]">Identity Status</TableHead>
+                <TableHead className="py-4 font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px]">Joined Date</TableHead>
+                <TableHead className="px-8 py-4 font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -150,16 +144,16 @@ export default function UsersPage() {
                 ))
               ) : users.length > 0 ? (
                 users.map((user) => (
-                  <TableRow key={user.id} className="group hover:bg-slate-50/50 transition-colors border-b border-slate-50">
+                  <TableRow key={user.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-50 dark:border-slate-800">
                     <TableCell className="px-8 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-sm border border-blue-100">
                           {user.name?.charAt(0) || 'U'}
                         </div>
-                        <span className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{user.name}</span>
+                        <span className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{user.name}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-slate-500 font-medium">{user.email}</TableCell>
+                    <TableCell className="text-slate-500 dark:text-slate-400 font-medium">{user.email}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={`rounded-lg font-black uppercase text-[10px] px-2 py-0.5 border ${getRoleColor(user.role?.name)}`}>
                         {user.role?.name || 'User'}

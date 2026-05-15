@@ -67,8 +67,6 @@ export function requireRole(
 /**
  * Verifies the request has a valid JWT token AND the user has permission
  * for the specified resource and action.
- * 
- * Example: requirePermission(request, "blogs", "create")
  */
 export function requirePermission(
     request: NextRequest,
@@ -81,9 +79,8 @@ export function requirePermission(
     const access = result.session.access || {};
     const resourceAccess = access[resource];
 
-    // Check if user has permission. Supports array of actions or boolean true.
-    const hasAccess = 
-        resourceAccess === true || 
+    const hasAccess =
+        resourceAccess === true ||
         (Array.isArray(resourceAccess) && resourceAccess.includes(action));
 
     if (!hasAccess) {

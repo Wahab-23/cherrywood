@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { getStoredAuth } from '@/lib/auth-context'
+
 import { UserCircle, Mail, Shield, Key, Save, Loader2, CheckCircle2, ChevronLeft, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
@@ -29,13 +29,8 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
   }, [id])
 
   const fetchUser = async () => {
-    const auth = getStoredAuth()
     try {
-      const response = await fetch(`/api/users/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${auth?.token}`
-        }
-      })
+      const response = await fetch(`/api/users/${id}`)
       const data = await response.json()
       if (data.success) {
         setUser(data.data)
@@ -58,13 +53,11 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
     setError('')
     setSuccess(false)
 
-    const auth = getStoredAuth()
     try {
       const response = await fetch(`/api/users/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${auth?.token}`
         },
         body: JSON.stringify({
           name,

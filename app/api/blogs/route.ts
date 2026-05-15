@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth, requirePermission } from "@/lib/guards";
 
 export async function GET(request: NextRequest) {
-    // Blog listing is public — no auth required
     try {
         const { searchParams } = new URL(request.url);
         const page = searchParams.get("page") || 1;

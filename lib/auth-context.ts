@@ -2,40 +2,42 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string | null;
+  roleName: string;
   role: {
     id: string;
     name: string;
   };
+  isVerified: boolean;
+  status: string;
 }
 
-export interface AuthState {
-  token: string | null;
-  user: AuthUser | null;
-  isLoading: boolean;
-  error: string | null;
-}
-
-export const getStoredAuth = () => {
+/**
+ * Get stored user info from sessionStorage (display purposes only).
+ * The actual auth token lives in an httpOnly cookie — never in JS storage.
+ */
+export const getStoredUser = (): AuthUser | null => {
   if (typeof window === 'undefined') return null;
-  
-  const token = localStorage.getItem('auth_token');
-  const user = localStorage.getItem('auth_user');
-  
-  if (!token || !user) return null;
-  
+
+  const user = sessionStorage.getItem('auth_user');
+  if (!user) return null;
+
   try {
-    return { token, user: JSON.parse(user) };
+    return JSON.parse(user);
   } catch {
     return null;
   }
 };
 
-export const setStoredAuth = (token: string, user: AuthUser) => {
-  localStorage.setItem('auth_token', token);
-  localStorage.setItem('auth_user', JSON.stringify(user));
+/**
+ * Cache user info in sessionStorage after login (for display only).
+ */
+export const setStoredUser = (user: AuthUser) => {
+  sessionStorage.setItem('auth_user', JSON.stringify(user));
 };
 
-export const clearStoredAuth = () => {
-  localStorage.removeItem('auth_token');
-  localStorage.removeItem('auth_user');
+/**
+ * Clear cached user info on logout.
+ */
+export const clearStoredUser = () => {
+  sessionStorage.removeItem('auth_user');
 };
