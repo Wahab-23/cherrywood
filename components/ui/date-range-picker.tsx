@@ -42,6 +42,10 @@ export function DatePickerWithRange({
   const [tempDate, setTempDate] = React.useState<DateRange | undefined>(date)
   const [isOpen, setIsOpen] = React.useState(false)
 
+  React.useEffect(() => {
+    setTempDate(date)
+  }, [date])
+
   // Explicit presets from GA screenshot
   const presets = [
     { label: 'Custom', getValue: () => tempDate },
@@ -96,7 +100,15 @@ export function DatePickerWithRange({
           >
             <div className="flex items-center">
               <CalendarIcon className="mr-2 h-4 w-4 text-blue-500 group-hover:rotate-12 transition-transform" />
-              <span className="text-slate-400 mr-2">Last 28 days</span>
+              <span className="text-slate-400 mr-2 whitespace-nowrap hidden sm:inline-block">
+                {presets.slice(1).find((preset) => {
+                  const val = preset.getValue()
+                  return (
+                    date?.from?.toDateString() === val?.from?.toDateString() &&
+                    date?.to?.toDateString() === val?.to?.toDateString()
+                  )
+                })?.label || 'Custom'}
+              </span>
               {date?.from ? (
                 date.to ? (
                   <span className="text-slate-900 dark:text-white">

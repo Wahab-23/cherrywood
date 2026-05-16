@@ -80,6 +80,7 @@ export function requirePermission(
     const resourceAccess = access[resource];
 
     const hasAccess =
+        result.session.roleName?.toLowerCase() === 'admin' ||
         resourceAccess === true ||
         (Array.isArray(resourceAccess) && resourceAccess.includes(action));
 

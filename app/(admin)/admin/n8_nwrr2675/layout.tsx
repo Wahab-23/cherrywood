@@ -63,11 +63,19 @@ function AdminLayoutContent({
     router.push('/admin/login')
   }
 
+  const hasPermission = (resource: string, action: string = 'read') => {
+    if (!user) return false;
+    if (user.roleName?.toLowerCase() === 'admin') return true;
+    const access = user.access || {};
+    const resourceAccess = access[resource];
+    return resourceAccess === true || (Array.isArray(resourceAccess) && resourceAccess.includes(action));
+  }
+
   const [openMenus, setOpenMenus] = useState<string[]>(['Dashboard'])
 
   const navItems = [
-    { 
-      label: 'Dashboard', 
+    {
+      label: 'Dashboard',
       icon: LayoutDashboard,
       href: '/admin/n8_nwrr2675/dashboard',
       children: [
@@ -75,12 +83,34 @@ function AdminLayoutContent({
         { href: '/admin/n8_nwrr2675/dashboard/insights', label: 'Insights' },
       ]
     },
-    { href: '/admin/n8_nwrr2675/users', label: 'Users', icon: Users },
-    { href: '/admin/n8_nwrr2675/blogs', label: 'Blogs', icon: BookOpen },
-    { href: '/admin/n8_nwrr2675/projects', label: 'Projects', icon: Briefcase },
-    { href: '/admin/n8_nwrr2675/pages', label: 'Pages', icon: FileText },
-    { href: '/admin/n8_nwrr2675/units', label: 'Units', icon: Box },
-    { href: '/admin/n8_nwrr2675/media', label: 'Media', icon: ImageIcon },
+    {
+      label: 'Users Management',
+      icon: Users,
+      href: '/admin/n8_nwrr2675/users',
+      resource: 'users',
+      children: [
+        { href: '/admin/n8_nwrr2675/users/list', label: 'All Users', resource: 'users', action: 'read' },
+        { href: '/admin/n8_nwrr2675/users/new', label: 'Create User', resource: 'users', action: 'create' },
+        { href: '/admin/n8_nwrr2675/users/roles', label: 'Roles', resource: 'roles', action: 'read' },
+        { href: '/admin/n8_nwrr2675/users/permissions', label: 'permissions', resource: 'roles', action: 'update' },
+      ]
+    },
+    {
+      label: 'Blogs',
+      icon: BookOpen,
+      href: '/admin/n8_nwrr2675/blogs',
+      resource: 'blogs',
+      children: [
+        { href: '/admin/n8_nwrr2675/blogs/all_articles', label: 'All Articles', resource: 'blogs', action: 'read' },
+        { href: '/admin/n8_nwrr2675/blogs/new', label: 'Create New Article', resource: 'blogs', action: 'create' },
+        { href: '/admin/n8_nwrr2675/blogs/categories', label: 'Manage Categories', resource: 'blogs', action: 'read' },
+        { href: '/admin/n8_nwrr2675/blogs/new_category', label: 'Create New Category', resource: 'blogs', action: 'create' },
+      ]
+    },
+    { href: '/admin/n8_nwrr2675/projects', label: 'Projects', icon: Briefcase, resource: 'projects' },
+    { href: '/admin/n8_nwrr2675/pages', label: 'Pages', icon: FileText, resource: 'pages' },
+    { href: '/admin/n8_nwrr2675/units', label: 'Units', icon: Box, resource: 'units' },
+    { href: '/admin/n8_nwrr2675/media', label: 'Media', icon: ImageIcon, resource: 'media' },
   ]
 
   const secondaryNavItems = [
@@ -95,7 +125,7 @@ function AdminLayoutContent({
   }
 
   const toggleMenu = (label: string) => {
-    setOpenMenus(prev => 
+    setOpenMenus(prev =>
       prev.includes(label) ? prev.filter(i => i !== label) : [...prev, label]
     )
   }
@@ -122,72 +152,75 @@ function AdminLayoutContent({
           <div>
             <p className="px-4 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Main Menu</p>
             <nav className="space-y-1.5">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                const active = isParentActive(item)
-                const hasChildren = item.children && item.children.length > 0
-                const isOpen = openMenus.includes(item.label)
+              {navItems
+                .filter(item => !item.resource || hasPermission(item.resource, 'read'))
+                .map((item) => {
+                  const Icon = item.icon
+                  const active = isParentActive(item)
+                  const filteredChildren = item.children?.filter((child: any) => !child.resource || hasPermission(child.resource, child.action || 'read'))
+                  const hasChildren = filteredChildren && filteredChildren.length > 0
+                  const isOpen = openMenus.includes(item.label)
 
-                return (
-                  <div key={item.label} className="space-y-1">
-                    {hasChildren ? (
-                      <button
-                        onClick={() => toggleMenu(item.label)}
-                        className={cn(
-                          'w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group',
-                          active
-                            ? 'bg-blue-50/50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-400'
-                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Icon className={cn("w-5 h-5", active ? "text-blue-600 dark:text-blue-400" : "text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white")} />
-                          <span className="font-semibold text-sm">{item.label}</span>
-                        </div>
-                        <ChevronRight className={cn("w-4 h-4 transition-transform duration-200", isOpen && "rotate-90")} />
-                      </button>
-                    ) : (
-                      <Link
-                        href={item.href!}
-                        className={cn(
-                          'flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group',
-                          active
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shadow-sm'
-                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Icon className={cn("w-5 h-5", active ? "text-blue-600 dark:text-blue-400" : "text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white")} />
-                          <span className="font-semibold text-sm">{item.label}</span>
-                        </div>
-                        {active && <ChevronRight className="w-4 h-4" />}
-                      </Link>
-                    )}
+                  return (
+                    <div key={item.label} className="space-y-1">
+                      {hasChildren ? (
+                        <button
+                          onClick={() => toggleMenu(item.label)}
+                          className={cn(
+                            'w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group',
+                            active
+                              ? 'bg-blue-50/50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-400'
+                              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon className={cn("w-5 h-5", active ? "text-blue-600 dark:text-blue-400" : "text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white")} />
+                            <span className="font-semibold text-sm">{item.label}</span>
+                          </div>
+                          <ChevronRight className={cn("w-4 h-4 transition-transform duration-200", isOpen && "rotate-90")} />
+                        </button>
+                      ) : (
+                        <Link
+                          href={item.href!}
+                          className={cn(
+                            'flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group',
+                            active
+                              ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shadow-sm'
+                              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon className={cn("w-5 h-5", active ? "text-blue-600 dark:text-blue-400" : "text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white")} />
+                            <span className="font-semibold text-sm">{item.label}</span>
+                          </div>
+                          {active && <ChevronRight className="w-4 h-4" />}
+                        </Link>
+                      )}
 
-                    {hasChildren && isOpen && (
-                      <div className="ml-9 pl-4 border-l border-slate-100 dark:border-slate-800 space-y-1 mt-1">
-                        {item.children.map((child) => {
-                          const childActive = isActive(child.href)
-                          return (
-                            <Link
-                              key={child.href}
-                              href={child.href}
-                              className={cn(
-                                'block py-2 px-3 rounded-lg text-xs font-bold transition-colors',
-                                childActive
-                                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10'
-                                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                              )}
-                            >
-                              {child.label}
-                            </Link>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+                      {hasChildren && isOpen && (
+                        <div className="ml-9 pl-4 border-l border-slate-100 dark:border-slate-800 space-y-1 mt-1">
+                          {filteredChildren.map((child: any) => {
+                            const childActive = isActive(child.href)
+                            return (
+                              <Link
+                                key={child.href}
+                                href={child.href}
+                                className={cn(
+                                  'block py-2 px-3 rounded-lg text-xs font-bold transition-colors',
+                                  childActive
+                                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10'
+                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                )}
+                              >
+                                {child.label}
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
             </nav>
           </div>
 
@@ -223,8 +256,12 @@ function AdminLayoutContent({
         {/* Footer User Profile */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
           <div className="flex items-center gap-3 p-2 mb-4">
-            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold border-2 border-white dark:border-slate-800 shadow-sm">
-              {user?.name?.charAt(0) || 'A'}
+            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold border-2 border-white dark:border-slate-800 shadow-sm overflow-hidden">
+              {user?.profile_image ? (
+                <img src={user.profile_image} alt={user.name} className="w-full h-full object-cover" />
+              ) : (
+                user?.name?.charAt(0) || 'A'
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user?.name || 'Admin User'}</p>
@@ -264,8 +301,12 @@ function AdminLayoutContent({
                 <p className="text-sm font-bold text-slate-900 dark:text-white">{user?.name || 'Admin'}</p>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-tight">{user?.roleName || user?.role?.name || 'Administrator'}</p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
-                <UserCircle className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden">
+                {user?.profile_image ? (
+                  <img src={user.profile_image} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <UserCircle className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+                )}
               </div>
             </Link>
           </div>

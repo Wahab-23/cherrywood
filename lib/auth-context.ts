@@ -9,6 +9,8 @@ export interface AuthUser {
   };
   isVerified: boolean;
   status: string;
+  profile_image?: string | null;
+  access?: any;
 }
 
 /**

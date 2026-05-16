@@ -1,8 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { writeFile, mkdir, unlink, access, readdir, stat, rm } from 'fs/promises';
 import path from 'path';
+import { requirePermission } from '@/lib/guards';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+    const auth = requirePermission(request, "media", "read");
+    if ("error" in auth) return auth.error;
+
     try {
         const { searchParams } = new URL(request.url);
         const folderPath = searchParams.get('path') || '';
@@ -61,11 +65,23 @@ export async function GET(request: Request) {
     }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
     try {
         const formData = await request.formData();
         const action = formData.get('action') as string || 'upload';
         const uploadPath = formData.get('path') as string || '';
+
+        // Authorization logic:
+        // 1. If it's a profile picture upload, any authenticated user can do it.
+        // 2. Otherwise, require 'media:create' permission.
+        if (uploadPath !== 'users_profile') {
+            const auth = requirePermission(request, "media", "create");
+            if ("error" in auth) return auth.error;
+        } else {
+            // For profile images, just require being logged in
+            const auth = requirePermission(request, "users", "read"); // or some basic auth check
+            if ("error" in auth) return auth.error;
+        }
 
         if (action === 'createFolder') {
             const folderName = formData.get('name') as string;
@@ -106,7 +122,10 @@ export async function POST(request: Request) {
     }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
+    const auth = requirePermission(request, "media", "delete");
+    if ("error" in auth) return auth.error;
+
     try {
         const { url, path: folderPath, type } = await request.json();
 

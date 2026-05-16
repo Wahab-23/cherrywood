@@ -30,6 +30,11 @@ export async function GET(request: NextRequest) {
             skip: (Number(page) - 1) * Number(limit),
             take: Number(limit),
             orderBy: { name: "asc" },
+            include: {
+                _count: {
+                    select: { users: true }
+                }
+            }
         });
         const count = await prisma.role.count({ where });
         return NextResponse.json({

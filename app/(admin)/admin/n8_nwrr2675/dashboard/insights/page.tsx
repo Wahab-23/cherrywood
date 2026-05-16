@@ -263,11 +263,45 @@ export default function InsightsPage() {
     const [loading, setLoading] = useState(true)
     const [chartsLoading, setChartsLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
+    const [isDateLoaded, setIsDateLoaded] = useState(false)
 
     const [date, setDate] = useState<DateRange | undefined>({
-        from: subDays(new Date(), 27),
+        from: subDays(new Date(), 7),
         to: endOfDay(new Date()),
     })
+
+    // Load from local storage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem('cherrywood_insights_date')
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved)
+                if (parsed.from && parsed.to) {
+                    const fromDate = new Date(parsed.from)
+                    const toDate = new Date(parsed.to)
+                    if (!isNaN(fromDate.getTime()) && !isNaN(toDate.getTime())) {
+                        setDate({
+                            from: fromDate,
+                            to: toDate
+                        })
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to parse saved date range', e)
+            }
+        }
+        setIsDateLoaded(true)
+    }, [])
+
+    // Save to local storage on change
+    useEffect(() => {
+        if (isDateLoaded && date?.from && date?.to && !isNaN(date.from.getTime()) && !isNaN(date.to.getTime())) {
+            localStorage.setItem('cherrywood_insights_date', JSON.stringify({
+                from: date.from.toISOString(),
+                to: date.to.toISOString()
+            }))
+        }
+    }, [date, isDateLoaded])
 
     // ── Fetch session table ──────────────────────────────────────────────────
     const fetchReports = useCallback(async () => {

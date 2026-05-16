@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse, NextRequest } from "next/server";
 import { requirePermission } from "@/lib/guards";
+import bcrypt from "bcrypt";
 
 export async function GET(request: NextRequest) {
     const auth = requirePermission(request, "users", "read");
@@ -45,10 +46,18 @@ export async function POST(request: NextRequest) {
 
     try {
         const body = await request.json();
+        
+        // Hash password if provided
+        if (body.password) {
+            body.password = await bcrypt.hash(body.password, 10);
+        }
+
         const user = await prisma.user.create({
             data: body
         });
-        return NextResponse.json({ success: true, data: user });
+        
+        const { password: _password, ...safeUser } = user;
+        return NextResponse.json({ success: true, data: safeUser });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: process.env.NODE_ENV === "development" ? error : "Internal Server Error" }, { status: 500 });
     }

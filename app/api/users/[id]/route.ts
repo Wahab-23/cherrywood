@@ -37,13 +37,27 @@ export async function GET(request: NextRequest, { params }: { params: Promise<Pa
 }
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<Params> }) {
-    // Only admins can update users
-    const auth = requirePermission(request, "users", "update");
-    if ("error" in auth) return auth.error;
+    const { id } = await params;
+    let auth = requirePermission(request, "users", "update");
+    
+    // Check if it's a self-update (users should always be able to update their own profile)
+    const readAuth = requirePermission(request, "users", "read");
+    const isSelfUpdate = !("error" in auth) ? false : (!("error" in readAuth) && readAuth.session?.userId === id);
+    
+    // If it's not a self-update and they don't have update permissions, return the error
+    if ("error" in auth && !isSelfUpdate) return auth.error;
 
     try {
-        const { id } = await params;
-        const { password, ...rest } = await request.json();
+        const body = await request.json();
+        let { password, ...rest } = body;
+        
+        // If it's a self-update and NOT an admin, prevent changing role or status
+        if (isSelfUpdate && ("error" in auth)) {
+            delete rest.role_id;
+            delete rest.status;
+            delete rest.is_verified;
+        }
+
         const data: Record<string, unknown> = { ...rest };
 
         // Only hash and update the password if explicitly provided

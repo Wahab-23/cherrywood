@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { DateRange } from "react-day-picker"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -83,6 +82,40 @@ export default function Dashboard() {
     from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
     to: new Date()
   })
+  const [isDateLoaded, setIsDateLoaded] = useState(false)
+
+  // Load from local storage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('cherrywood_dashboard_date')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed.from && parsed.to) {
+          const fromDate = new Date(parsed.from)
+          const toDate = new Date(parsed.to)
+          if (!isNaN(fromDate.getTime()) && !isNaN(toDate.getTime())) {
+            setDate({
+              from: fromDate,
+              to: toDate
+            })
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse saved date range', e)
+      }
+    }
+    setIsDateLoaded(true)
+  }, [])
+
+  // Save to local storage on change
+  useEffect(() => {
+    if (isDateLoaded && date?.from && date?.to && !isNaN(date.from.getTime()) && !isNaN(date.to.getTime())) {
+      localStorage.setItem('cherrywood_dashboard_date', JSON.stringify({
+        from: date.from.toISOString(),
+        to: date.to.toISOString()
+      }))
+    }
+  }, [date, isDateLoaded])
 
   useEffect(() => {
     async function fetchData() {
@@ -129,7 +162,7 @@ export default function Dashboard() {
         } else {
           params.append('period', period)
         }
-        
+
         const analyticsRes = await fetch(`/api/analytics/stats?${params.toString()}`)
         const analyticsData = await analyticsRes.json()
         setAnalytics(analyticsData)

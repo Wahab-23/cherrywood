@@ -147,7 +147,7 @@ export default function NewBlogPage() {
             if (response.ok) {
                 toast.success('Article created successfully')
 
-                router.push('/admin/n8_nwrr2675/blogs')
+                router.push('/admin/n8_nwrr2675/blogs/all_articles')
             } else {
                 toast.error(data.error || 'Failed to create article')
             }
@@ -169,7 +169,7 @@ export default function NewBlogPage() {
                             variant="ghost"
                             size="sm"
                             className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 px-2 -ml-2"
-                            onClick={() => router.push('/admin/n8_nwrr2675/blogs')}
+                            onClick={() => router.push('/admin/n8_nwrr2675/blogs/all_articles')}
                         >
                             <ArrowLeft className="w-4 h-4 mr-2" />
                             <span className="text-sm font-medium">Back</span>

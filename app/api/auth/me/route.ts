@@ -21,12 +21,15 @@ export async function GET(request: NextRequest) {
                 email: true,
                 is_verified: true,
                 status: true,
+                two_factor_enabled: true,
                 role: {
                     select: {
                         id: true,
                         name: true,
+                        access: true,
                     },
                 },
+                profile_image: true,
             },
         });
 
@@ -56,6 +59,9 @@ export async function GET(request: NextRequest) {
                 role: { id: user.role.id, name: user.role.name },
                 isVerified: user.is_verified,
                 status: user.status,
+                profile_image: user.profile_image,
+                two_factor_enabled: user.two_factor_enabled,
+                access: user.role.access || {},
             },
         });
     } catch (error) {

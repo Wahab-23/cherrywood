@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import {
     Select,
@@ -27,18 +26,13 @@ import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 
 import {
-    Save,
     ArrowLeft,
+    ExternalLink,
     Globe,
+    CheckCircle2,
     Layout,
-    Eye,
-    Settings2,
     Search,
     Image as ImageIcon,
-    CheckCircle2,
-    Clock,
-    ChevronDown,
-    ExternalLink,
     User as UserIcon,
     Calendar as CalendarIcon,
 } from 'lucide-react'
@@ -144,7 +138,7 @@ export default function BlogPage() {
             const data = await response.json()
             if (response.ok) {
                 toast.success('Article updated')
-                router.push('/admin/n8_nwrr2675/blogs')
+                router.push('/admin/n8_nwrr2675/blogs/all_articles')
             } else {
                 toast.error(data.error || 'Failed to update article')
             }
@@ -177,7 +171,7 @@ export default function BlogPage() {
                             variant="ghost"
                             size="sm"
                             className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors px-2 -ml-2"
-                            onClick={() => router.push('/admin/n8_nwrr2675/blogs')}
+                            onClick={() => router.push('/admin/n8_nwrr2675/blogs/all_articles')}
                         >
                             <ArrowLeft className="w-4 h-4 mr-2" />
                             <span className="text-sm font-medium">Back</span>

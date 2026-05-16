@@ -5,40 +5,63 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-
-import { UserCircle, Mail, Shield, Key, Save, Loader2, CheckCircle2, ChevronLeft, Trash2 } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import { UserCircle, Mail, Shield, Key, Save, Loader2, CheckCircle2, ChevronLeft, Trash2, FileText } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import ImageUpload from '@/components/admin/MultiImageUpload'
+import { toast } from 'sonner'
 
 export default function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
+  
   const [user, setUser] = useState<any>(null)
+  const [roles, setRoles] = useState<any[]>([])
+  
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState('')
+  const [roleId, setRoleId] = useState('')
   const [password, setPassword] = useState('')
+  const [bio, setBio] = useState('')
+  const [profileImage, setProfileImage] = useState<string | null>(null)
+  const [status, setStatus] = useState('active')
+  
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetchUser()
+    fetchInitialData()
   }, [id])
 
-  const fetchUser = async () => {
+  const fetchInitialData = async () => {
     try {
-      const response = await fetch(`/api/users/${id}`)
-      const data = await response.json()
-      if (data.success) {
-        setUser(data.data)
-        setName(data.data.name || '')
-        setEmail(data.data.email || '')
-        setRole(data.data.role?.name || data.data.role || 'buyer')
+      const [userRes, rolesRes] = await Promise.all([
+        fetch(`/api/users/${id}`),
+        fetch('/api/roles?limit=100')
+      ])
+      
+      const userData = await userRes.json()
+      const rolesData = await rolesRes.json()
+      
+      if (rolesData.success) {
+        setRoles(rolesData.data)
+      }
+
+      if (userData.success) {
+        const u = userData.data
+        setUser(u)
+        setName(u.name || '')
+        setEmail(u.email || '')
+        setRoleId(u.role_id || '')
+        setBio(u.bio || '')
+        setProfileImage(u.profile_image || null)
+        setStatus(u.status || 'active')
       } else {
-        setError(data.error || 'User not found')
+        setError(userData.error || 'User not found')
       }
     } catch (err) {
       setError('Failed to fetch user details')
@@ -51,7 +74,6 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
     e.preventDefault()
     setSaving(true)
     setError('')
-    setSuccess(false)
 
     try {
       const response = await fetch(`/api/users/${id}`, {
@@ -62,7 +84,10 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
         body: JSON.stringify({
           name,
           email,
-          role,
+          role_id: roleId,
+          bio,
+          profile_image: profileImage,
+          status,
           ...(password ? { password } : {})
         })
       })
@@ -70,13 +95,26 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || 'Failed to update user')
 
-      setSuccess(true)
+      toast.success('User updated successfully')
       setPassword('')
-      setTimeout(() => setSuccess(false), 3000)
     } catch (err: any) {
+      toast.error(err.message)
       setError(err.message)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this user?")) return
+    try {
+      const response = await fetch(`/api/users/${id}`, { method: 'DELETE' })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Failed to delete user')
+      toast.success('User deleted successfully')
+      router.push('/admin/n8_nwrr2675/users/list')
+    } catch (err: any) {
+      toast.error(err.message)
     }
   }
 
@@ -92,19 +130,19 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
     return (
       <div className="text-center py-20">
         <h2 className="text-2xl font-bold text-slate-900 mb-4">{error}</h2>
-        <Button className="rounded-xl">
-          <Link href="/admin/n8_nwrr2675/users">Back to Users</Link>
+        <Button className="rounded-xl" asChild>
+          <Link href="/admin/n8_nwrr2675/users/list">Back to Users</Link>
         </Button>
       </div>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="rounded-xl text-slate-400 hover:text-slate-900">
-            <Link href="/admin/n8_nwrr2675/users">
+          <Button variant="ghost" size="icon" className="rounded-xl text-slate-400 hover:text-slate-900" asChild>
+            <Link href="/admin/n8_nwrr2675/users/list">
               <ChevronLeft className="w-6 h-6" />
             </Link>
           </Button>
@@ -113,7 +151,7 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
             <p className="text-slate-500 font-medium">Modify account details and system permissions</p>
           </div>
         </div>
-        <Button variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl font-bold">
+        <Button onClick={handleDelete} variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl font-bold">
           <Trash2 className="w-4 h-4 mr-2" />
           Delete User
         </Button>
@@ -122,19 +160,33 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-1 space-y-6">
           <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-slate-50">
+              <CardTitle className="text-lg">Profile Picture</CardTitle>
+              <CardDescription>Upload a user avatar</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <ImageUpload
+                  mode="single"
+                  value={profileImage}
+                  onChange={setProfileImage}
+                  uploadPath="users_profile"
+              />
+            </CardContent>
+          </Card>
+          
+          <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
             <CardContent className="p-6 text-center">
-              <div className="w-24 h-24 rounded-full bg-blue-50 mx-auto flex items-center justify-center text-3xl font-bold text-blue-600 border-4 border-white shadow-sm mb-4">
-                {user.name?.charAt(0) || 'U'}
-              </div>
               <h3 className="text-lg font-bold text-slate-900">{user.name}</h3>
               <p className="text-sm text-slate-500 mb-4">{user.email}</p>
               <Badge className="bg-blue-50 text-blue-600 border-none rounded-lg px-3 py-1 font-bold uppercase text-[10px]">
-                {user.role?.name || user.role || 'Member'}
+                {user.role?.name || 'Member'}
               </Badge>
               <div className="mt-6 pt-6 border-t border-slate-50 grid grid-cols-1 gap-2 text-left">
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-bold text-slate-400 uppercase">Status</span>
-                  <Badge className="bg-green-50 text-green-600 border-none rounded-md text-[10px] font-black uppercase">Active</Badge>
+                  <Badge className={status === 'active' ? "bg-green-50 text-green-600 border-none rounded-md text-[10px] font-black uppercase" : "bg-red-50 text-red-600 border-none rounded-md text-[10px] font-black uppercase"}>
+                    {status}
+                  </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-bold text-slate-400 uppercase">Joined</span>
@@ -150,23 +202,10 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
             <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
               <CardHeader className="px-8 py-6 border-b border-slate-50">
                 <CardTitle className="text-xl font-bold text-slate-900">User Information</CardTitle>
-                <CardDescription>Update name, email and system role</CardDescription>
+                <CardDescription>Update name, email, bio, and system role</CardDescription>
               </CardHeader>
               <CardContent className="p-8 space-y-6">
-                {error && (
-                  <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-bold border border-red-100 flex items-center gap-3">
-                    <Shield className="w-5 h-5" />
-                    {error}
-                  </div>
-                )}
-
-                {success && (
-                  <div className="p-4 bg-green-50 text-green-600 rounded-xl text-sm font-bold border border-green-100 flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5" />
-                    User updated successfully!
-                  </div>
-                )}
-
+                
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-slate-700 font-bold">Full Name</Label>
@@ -199,29 +238,58 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="role" className="text-slate-700 font-bold">System Role</Label>
+                  <Label htmlFor="bio" className="text-slate-700 font-bold">Biography</Label>
                   <div className="relative">
-                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <select
-                      id="role"
-                      value={role}
-                      onChange={(e) => setRole(e.target.value)}
-                      className="w-full pl-10 pr-4 h-11 bg-white border border-slate-200 rounded-xl appearance-none focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-900"
-                    >
-                      <option value="admin">admin</option>
-                      <option value="editor">editor</option>
-                      <option value="author">author</option>
-                      <option value="buyer">buyer</option>
-                    </select>
+                    <FileText className="absolute left-3 top-4 w-4 h-4 text-slate-400" />
+                    <Textarea
+                      id="bio"
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      className="pl-10 rounded-xl border-slate-200 focus:ring-blue-500 min-h-[100px] py-3"
+                      placeholder="Write a short biography..."
+                    />
                   </div>
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="role" className="text-slate-700 font-bold">System Role</Label>
+                    <div className="relative">
+                      <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <select
+                        id="role"
+                        value={roleId}
+                        onChange={(e) => setRoleId(e.target.value)}
+                        className="w-full pl-10 pr-4 h-11 bg-white border border-slate-200 rounded-xl appearance-none focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-900"
+                        required
+                      >
+                        <option value="" disabled>Select a role</option>
+                        {roles.map(r => (
+                          <option key={r.id} value={r.id}>{r.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="status" className="text-slate-700 font-bold">Account Status</Label>
+                    <div className="flex items-center justify-between p-3 border border-slate-200 rounded-xl h-11">
+                      <span className="text-sm font-medium text-slate-700">{status === 'active' ? 'Active' : 'Suspended'}</span>
+                      <Switch 
+                        checked={status === 'active'}
+                        onCheckedChange={(c) => setStatus(c ? 'active' : 'suspended')}
+                      />
+                    </div>
+                  </div>
+                </div>
+
               </CardContent>
             </Card>
 
             <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
               <CardHeader className="px-8 py-6 border-b border-slate-50">
-                <CardTitle className="text-xl font-bold text-slate-900">Security & Access</CardTitle>
-                <CardDescription>Reset user password</CardDescription>
+                <CardTitle className="text-xl font-bold text-slate-900">Security</CardTitle>
+                <CardDescription>Reset user password (leave blank to keep current)</CardDescription>
               </CardHeader>
               <CardContent className="p-8 space-y-6">
                 <div className="space-y-2">
@@ -250,7 +318,7 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
                   ) : (
                     <Save className="w-5 h-5 mr-2" />
                   )}
-                  {saving ? 'Updating...' : 'Update User Account'}
+                  {saving ? 'Updating...' : 'Save Changes'}
                 </Button>
               </div>
             </Card>

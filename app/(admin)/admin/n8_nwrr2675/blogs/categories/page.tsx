@@ -70,7 +70,7 @@ export default function CategoriesPage() {
                     <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Structure and organize your publication topics</p>
                 </div>
                 <Button
-                    onClick={() => router.push(`/admin/n8_nwrr2675/blogs/categories/new`)}
+                    onClick={() => router.push(`/admin/n8_nwrr2675/blogs/new_category`)}
                     className="rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-50 dark:hover:bg-slate-200 dark:text-slate-900 shadow-lg shadow-slate-200 dark:shadow-none font-black h-11 px-6 transition-all active:scale-95"
                 >
                     <Plus className="w-5 h-5 mr-2" />

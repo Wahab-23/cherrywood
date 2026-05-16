@@ -34,6 +34,8 @@ model User {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
   is_verified   Boolean  @default(false)
+  two_factor_secret  String?
+  two_factor_enabled Boolean @default(false)
 
   units           Unit[]
   project_updates ProjectUpdate[]
@@ -41,6 +43,16 @@ model User {
   history         History[]
 
   @@map("users")
+}
+
+model PasswordResetToken {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  token      String   @unique
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  @@map("password_reset_tokens")
 }
 
 model Project {
