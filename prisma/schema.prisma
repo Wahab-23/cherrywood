@@ -134,10 +134,11 @@ model Blog {
 }
 
 model BlogCategory {
-  id    String @id @default(uuid())
-  name  String
-  slug  String @unique
-  blogs Blog[]
+  id     String  @id @default(uuid())
+  name   String
+  slug   String  @unique
+  blogs  Blog[]
+  system Boolean @default(false)
 
   @@map("blog_categories")
 }

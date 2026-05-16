@@ -6,15 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { useRouter } from 'next/navigation'
 import { Plus, Search, Edit, Trash2, Eye, BookOpen, User, Calendar, FileText, Layout, CheckCircle2, Clock } from 'lucide-react'
 
 export default function BlogsPage() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [open, setOpen] = useState(false)
   const [blogs, setBlogs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [meta, setMeta] = useState<any>(null)
@@ -69,62 +65,12 @@ export default function BlogsPage() {
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Content Management</h1>
           <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Create, edit and publish articles for your audience</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-50 dark:hover:bg-slate-200 dark:text-slate-900 shadow-lg shadow-slate-200 dark:shadow-none font-black h-11 px-6">
-              <Plus className="w-5 h-5 mr-2" />
-              Write New Blog
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl rounded-2xl border-none shadow-2xl p-0 overflow-hidden">
-            <div className="bg-slate-900 dark:bg-slate-800 p-8 text-white">
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-black">New Article</DialogTitle>
-                <DialogDescription className="text-blue-100 font-medium">Draft your next masterpiece</DialogDescription>
-              </DialogHeader>
-            </div>
-            <div className="p-8 space-y-6 bg-white max-h-[70vh] overflow-y-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="title" className="font-bold text-slate-700">Article Title</Label>
-                  <Input id="title" placeholder="e.g. Future of AI in Web Development" className="rounded-xl border-slate-200 h-11" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="slug" className="font-bold text-slate-700">URL Slug</Label>
-                  <Input id="slug" placeholder="future-of-ai" className="rounded-xl border-slate-200 h-11" />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="category" className="font-bold text-slate-700">Category</Label>
-                  <div className="relative">
-                    <Layout className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input id="category" placeholder="Tech, Lifestyle, etc." className="pl-10 rounded-xl border-slate-200 h-11" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="status" className="font-bold text-slate-700">Publish Status</Label>
-                  <select id="status" className="w-full h-11 bg-white border border-slate-200 rounded-xl px-4 appearance-none focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-900">
-                    <option>draft</option>
-                    <option>published</option>
-                  </select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description" className="font-bold text-slate-700">Short Summary</Label>
-                <Textarea id="description" placeholder="A brief overview of your article..." className="rounded-xl border-slate-200 min-h-[80px]" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="content" className="font-bold text-slate-700">Main Content (Markdown supported)</Label>
-                <Textarea id="content" placeholder="Start writing..." className="rounded-xl border-slate-200 min-h-[300px] font-mono text-sm" />
-              </div>
-            </div>
-            <div className="p-6 bg-slate-50 flex justify-end gap-3">
-              <Button variant="outline" className="rounded-xl border-slate-200 font-bold" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button className="rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-50 dark:hover:bg-slate-200 dark:text-slate-900 font-black px-8">Save & Publish</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button
+          onClick={() => router.push(`/admin/n8_nwrr2675/blogs/new`)}
+          className="rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-50 dark:hover:bg-slate-200 dark:text-slate-900 shadow-lg shadow-slate-200 dark:shadow-none font-black h-11 px-6">
+          <Plus className="w-5 h-5 mr-2" />
+          Write New Blog
+        </Button>
       </div>
 
       <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
@@ -169,7 +115,7 @@ export default function BlogsPage() {
                   <TableRow key={blog.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-50 dark:border-slate-800">
                     <TableCell className="px-8 py-5">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200">
+                        <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
                           {blog.hero_image ? (
                             <img src={blog.hero_image} alt={blog.title} className="w-full h-full object-cover" />
                           ) : (
@@ -186,10 +132,17 @@ export default function BlogsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
-                          <User className="w-3 h-3 text-slate-500" />
+                        <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden">
+                          {blog.author?.profile_image ? (
+                            <img src={blog.author.profile_image} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <User className="w-3.5 h-3.5 text-slate-500" />
+                          )}
                         </div>
-                        <span className="text-xs font-bold text-slate-600 uppercase truncate max-w-[100px]">{blog.author?.name || 'Admin'}</span>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[120px]">{blog.author?.name || 'Unknown'}</span>
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Author</span>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -210,8 +163,17 @@ export default function BlogsPage() {
                         </div>
                       )}
                     </TableCell>
-                    <TableCell className="text-slate-400 font-bold text-xs uppercase">
-                      {new Date(blog.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    <TableCell className="text-slate-400 font-bold text-[11px] uppercase tracking-tight">
+                      <div className="flex flex-col">
+                        <span className="text-slate-900 dark:text-slate-200">
+                          {new Date(blog.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                        <span className="text-[9px] opacity-70">
+                          {blog.status === 'published' 
+                            ? (blog.published_at && new Date(blog.published_at) > new Date() ? 'Scheduled' : 'Published')
+                            : 'Draft'}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="px-8 py-5 text-right">
                       <div className="flex items-center justify-end gap-1">

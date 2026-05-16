@@ -38,6 +38,8 @@ export async function GET(request: NextRequest) {
                 short_description: true,
                 hero_image: true,
                 created_at: true,
+                updated_at: true,
+                published_at: true,
                 status: true,
                 category: {
                     select: {
@@ -84,10 +86,47 @@ export async function POST(request: NextRequest) {
     if ("error" in auth) return auth.error;
 
     try {
-        const { ...data } = await request.json();
-        const blog = await prisma.blog.create({ data });
+        const body = await request.json();
+        const { author_id, published_at, status, ...rest } = body;
+
+        // Validation
+        if (!rest.title || !rest.slug || !rest.category_id) {
+            return NextResponse.json(
+                { success: false, message: "Missing required fields: title, slug, category_id" },
+                { status: 400 }
+            );
+        }
+
+        const blogData: any = {
+            ...rest,
+            status: status || "draft",
+            author_id: author_id || auth.session.userId,
+        };
+
+        // Handle published_at
+        if (published_at) {
+            blogData.published_at = new Date(published_at);
+        } else if (status === "published") {
+            blogData.published_at = new Date();
+        }
+
+        const blog = await prisma.blog.create({ data: blogData });
         return NextResponse.json({ success: true, data: blog }, { status: 201 });
     } catch (error: any) {
+        console.error("[POST /api/blogs]", error);
+        
+        // Handle unique constraint violation (e.g. slug)
+        if (error.code === 'P2002') {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "A blog with this slug already exists.",
+                    error: "Slug conflict"
+                },
+                { status: 400 }
+            );
+        }
+
         return NextResponse.json(
             {
                 success: false,
