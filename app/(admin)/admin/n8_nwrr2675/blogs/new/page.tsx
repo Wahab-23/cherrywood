@@ -43,6 +43,7 @@ import BlockNoteEditor, {
 } from '@/components/blocknote/blocknoteEditor'
 
 import ImageUpload from '@/components/admin/MultiImageUpload'
+import FAQManager from '@/components/admin/FAQManager'
 
 export default function NewBlogPage() {
     const router = useRouter()
@@ -64,6 +65,7 @@ export default function NewBlogPage() {
     const [authorId, setAuthorId] = useState('')
     const [publishedAt, setPublishedAt] = useState<Date | undefined>(new Date())
     const [currentUser, setCurrentUser] = useState<any>(null)
+    const [faqs, setFaqs] = useState('[]')
 
     useEffect(() => {
         fetchInitialData()
@@ -139,6 +141,7 @@ export default function NewBlogPage() {
                     hero_image: heroImage,
                     author_id: authorId,
                     published_at: publishedAt?.toISOString(),
+                    faqs,
                 }),
             })
 
@@ -324,6 +327,11 @@ export default function NewBlogPage() {
                                     placeholder="Begin your masterpiece..."
                                 />
                             </div>
+                        </section>
+
+                        {/* Reusable FAQ Section */}
+                        <section className="bg-white rounded-2xl border border-neutral-200/50 shadow-2xl shadow-neutral-200/20 p-6">
+                            <FAQManager value={faqs} onChange={setFaqs} />
                         </section>
                     </main>
 

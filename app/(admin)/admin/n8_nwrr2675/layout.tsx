@@ -107,9 +107,18 @@ function AdminLayoutContent({
         { href: '/admin/n8_nwrr2675/blogs/new_category', label: 'Create New Category', resource: 'blogs', action: 'create' },
       ]
     },
-    { href: '/admin/n8_nwrr2675/projects', label: 'Projects', icon: Briefcase, resource: 'projects' },
+    {
+      label: 'Projects',
+      icon: Briefcase,
+      href: '/admin/n8_nwrr2675/projects',
+      resource: 'projects',
+      children: [
+        { href: '/admin/n8_nwrr2675/projects', label: 'All Projects', resource: 'projects', action: 'read' },
+        { href: '/admin/n8_nwrr2675/projects/new', label: 'Create Project', resource: 'projects', action: 'create' },
+        { href: '/admin/n8_nwrr2675/units', label: 'Property Inventory', resource: 'units', action: 'read' },
+      ]
+    },
     { href: '/admin/n8_nwrr2675/pages', label: 'Pages', icon: FileText, resource: 'pages' },
-    { href: '/admin/n8_nwrr2675/units', label: 'Units', icon: Box, resource: 'units' },
     { href: '/admin/n8_nwrr2675/media', label: 'Media', icon: ImageIcon, resource: 'media' },
   ]
 

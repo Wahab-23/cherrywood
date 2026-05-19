@@ -132,6 +132,7 @@ model Blog {
   meta_description  String?      @db.Text
   hero_image        String?
   status            String? // draft, published
+  faqs              String?      @db.Text
   author_id         String
   author            User         @relation(fields: [author_id], references: [id])
   category_id       String
@@ -179,6 +180,7 @@ model Page {
   id               String   @id @default(uuid())
   title            String
   slug             String   @unique
+  template         String?  @default("default") // home, contact, careers, policy, journal, default
   content          String?  @db.Text
   meta_title       String?
   meta_description String?  @db.Text
@@ -186,6 +188,7 @@ model Page {
   og_description   String?  @db.Text
   og_image         String?
   status           String? // draft, published
+  faqs             String?  @db.Text
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 

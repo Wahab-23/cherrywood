@@ -88,6 +88,11 @@ const ChartContainer = React.forwardRef<
   const uniqueId = React.useId()
   const chartId = `chart-${id || uniqueId}`
 
+  const [isMounted, setIsMounted] = React.useState(false)
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   return (
     <ChartContext.Provider value={{ config }}>
       <div
@@ -113,9 +118,11 @@ const ChartContainer = React.forwardRef<
       >
         <ChartStyle id={chartId} config={config} />
 
-        <RechartsPrimitive.ResponsiveContainer>
-          {children}
-        </RechartsPrimitive.ResponsiveContainer>
+        {isMounted ? (
+          <RechartsPrimitive.ResponsiveContainer initialDimension={{ width: 100, height: 100 }}>
+            {children}
+          </RechartsPrimitive.ResponsiveContainer>
+        ) : null}
       </div>
     </ChartContext.Provider>
   )

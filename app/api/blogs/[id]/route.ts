@@ -43,6 +43,12 @@ export async function PUT(
         const body = await request.json();
         const { author_id, published_at, status, ...rest } = body;
 
+        // Fetch existing blog to compare changes
+        const existing = await prisma.blog.findUnique({ where: { id } });
+        if (!existing) {
+            return NextResponse.json({ success: false, message: "Blog not found" }, { status: 404 });
+        }
+
         const updateData: any = {
             ...rest,
             status,
@@ -53,10 +59,56 @@ export async function PUT(
         if (published_at) {
             updateData.published_at = new Date(published_at);
         } else if (status === "published") {
-            // Check if it already has a published_at
-            const existing = await prisma.blog.findUnique({ where: { id } });
-            if (!existing?.published_at) {
+            if (!existing.published_at) {
                 updateData.published_at = new Date();
+            }
+        }
+
+        // Compare fields and compile history records
+        const changes: { field_name: string; old_value: string | null; new_value: string | null }[] = [];
+        const fieldsToCheck = [
+            "title",
+            "slug",
+            "short_description",
+            "content",
+            "meta_title",
+            "meta_description",
+            "hero_image",
+            "status",
+            "author_id",
+            "category_id",
+            "faqs",
+        ];
+
+        for (const field of fieldsToCheck) {
+            if (field in updateData) {
+                const oldValue = (existing as any)[field];
+                const newValue = updateData[field];
+                
+                const normOld = oldValue === undefined || oldValue === null ? "" : String(oldValue).trim();
+                const normNew = newValue === undefined || newValue === null ? "" : String(newValue).trim();
+                
+                if (normOld !== normNew) {
+                    changes.push({
+                        field_name: field,
+                        old_value: oldValue !== null && oldValue !== undefined ? String(oldValue) : null,
+                        new_value: newValue !== null && newValue !== undefined ? String(newValue) : null,
+                    });
+                }
+            }
+        }
+
+        if (updateData.published_at) {
+            const oldValue = existing.published_at;
+            const newValue = updateData.published_at;
+            const normOld = oldValue ? new Date(oldValue).getTime() : 0;
+            const normNew = new Date(newValue).getTime();
+            if (normOld !== normNew) {
+                changes.push({
+                    field_name: "published_at",
+                    old_value: oldValue ? oldValue.toISOString() : null,
+                    new_value: newValue.toISOString(),
+                });
             }
         }
 
@@ -64,6 +116,21 @@ export async function PUT(
             where: { id },
             data: updateData,
         });
+
+        // Insert change logs if any changes were made
+        if (changes.length > 0) {
+            await prisma.history.createMany({
+                data: changes.map(change => ({
+                    entity_type: "blog",
+                    entity_id: id,
+                    field_name: change.field_name,
+                    old_value: change.old_value,
+                    new_value: change.new_value,
+                    changed_by: authResult.session.userId,
+                }))
+            });
+        }
+
         return NextResponse.json({ success: true, data: blog });
     } catch (error: any) {
         console.error("[PUT /api/blogs/[id]]", error);

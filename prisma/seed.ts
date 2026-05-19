@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
 import bcrypt from 'bcrypt';
+import { getInitialTemplateContent } from '../lib/pageConstants';
 
 async function main() {
   console.log('Seeding database...');
@@ -196,16 +197,51 @@ async function main() {
   });
 
   // 9. Pages
-  await prisma.page.upsert({
-    where: { slug: 'about-us' },
-    update: {},
-    create: {
+  const pages = [
+    {
       title: 'About Cherrywood',
-      slug: 'about-us',
-      content: 'We build the future of living.',
+      slug: 'about',
+      template: 'default',
+      content: JSON.stringify([{ type: 'paragraph', content: 'We build the future of living.' }]),
       status: 'published',
     },
-  });
+    {
+      title: 'Contact Directory',
+      slug: 'contact',
+      template: 'contact',
+      content: getInitialTemplateContent('contact'),
+      status: 'published',
+    },
+    {
+      title: 'Terms & Conditions',
+      slug: 'terms',
+      template: 'policy',
+      content: getInitialTemplateContent('policy'),
+      status: 'published',
+    },
+    {
+      title: 'Privacy Policy',
+      slug: 'privacy',
+      template: 'policy',
+      content: getInitialTemplateContent('policy'),
+      status: 'published',
+    },
+    {
+      title: 'The Journal',
+      slug: 'journal',
+      template: 'journal',
+      content: getInitialTemplateContent('journal'),
+      status: 'published',
+    }
+  ];
+
+  for (const page of pages) {
+    await prisma.page.upsert({
+      where: { slug: page.slug },
+      update: {},
+      create: page,
+    });
+  }
 
   console.log('Seeding completed!');
 }

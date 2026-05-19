@@ -22,6 +22,13 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 
@@ -35,6 +42,7 @@ import {
     Image as ImageIcon,
     User as UserIcon,
     Calendar as CalendarIcon,
+    History,
 } from 'lucide-react'
 
 import BlockNoteEditor, {
@@ -42,6 +50,7 @@ import BlockNoteEditor, {
 } from '@/components/blocknote/blocknoteEditor'
 
 import ImageUpload from '@/components/admin/MultiImageUpload'
+import FAQManager from '@/components/admin/FAQManager'
 
 export default function BlogPage() {
     const router = useRouter()
@@ -65,6 +74,97 @@ export default function BlogPage() {
     const [authorId, setAuthorId] = useState('')
     const [publishedAt, setPublishedAt] = useState<Date | undefined>(undefined)
     const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null)
+    const [faqs, setFaqs] = useState('[]')
+
+    const [historyOpen, setHistoryOpen] = useState(false)
+    const [historyLogs, setHistoryLogs] = useState<any[]>([])
+    const [loadingHistory, setLoadingHistory] = useState(false)
+
+    useEffect(() => {
+        if (historyOpen) {
+            const fetchHistory = async () => {
+                setLoadingHistory(true)
+                try {
+                    const res = await fetch(`/api/blogs/${params.id}/history`)
+                    const data = await res.json()
+                    if (res.ok && data.success) {
+                        setHistoryLogs(data.data)
+                    } else {
+                        toast.error('Failed to load edit history')
+                    }
+                } catch (error) {
+                    console.error(error)
+                    toast.error('Failed to load edit history')
+                } finally {
+                    setLoadingHistory(false)
+                }
+            }
+            fetchHistory()
+        }
+    }, [historyOpen, params.id])
+
+    const fieldLabels: Record<string, string> = {
+        title: 'Headline',
+        slug: 'URL Path',
+        short_description: 'Lead Synopsis',
+        content: 'Article Content',
+        meta_title: 'Meta Title',
+        meta_description: 'Meta Snippet',
+        hero_image: 'Cover Art',
+        status: 'Status',
+        author_id: 'Assigned Author',
+        category_id: 'Category',
+        published_at: 'Publish Date',
+        faqs: 'FAQ Sections',
+    }
+
+    const formatValue = (field: string, val: string | null) => {
+        if (!val) return 'Empty'
+        if (field === 'category_id') {
+            return categories.find(c => c.id === val)?.name || val
+        }
+        if (field === 'author_id') {
+            return authors.find(a => a.id === val)?.name || val
+        }
+        if (field === 'published_at') {
+            try {
+                return format(new Date(val), "MMM d, yyyy")
+            } catch {
+                return val
+            }
+        }
+        if (val.length > 60) return val.substring(0, 60) + '...'
+        return val
+    }
+
+    const groupChangesBySession = (logs: any[]) => {
+        const groups: {
+            timestamp: string
+            user: any
+            changes: any[]
+        }[] = []
+
+        logs.forEach(log => {
+            const logTime = new Date(log.created_at).getTime()
+
+            const matchingGroup = groups.find(group => {
+                const groupTime = new Date(group.timestamp).getTime()
+                return group.user.id === log.user.id && Math.abs(groupTime - logTime) < 2000
+            })
+
+            if (matchingGroup) {
+                matchingGroup.changes.push(log)
+            } else {
+                groups.push({
+                    timestamp: log.created_at,
+                    user: log.user,
+                    changes: [log]
+                })
+            }
+        })
+
+        return groups
+    }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -92,6 +192,7 @@ export default function BlogPage() {
                     setAuthorId(blogData.author_id || '')
                     setPublishedAt(blogData.published_at ? new Date(blogData.published_at) : undefined)
                     setLastUpdatedAt(blogData.updated_at ? new Date(blogData.updated_at) : null)
+                    setFaqs(blogData.faqs || '[]')
                 } else {
                     toast.error('Failed to load article')
                 }
@@ -132,6 +233,7 @@ export default function BlogPage() {
                     hero_image: heroImage,
                     author_id: authorId,
                     published_at: publishedAt?.toISOString(),
+                    faqs,
                 }),
             })
 
@@ -284,6 +386,11 @@ export default function BlogPage() {
                                 />
                             </div>
                         </section>
+
+                        {/* Reusable FAQ Section */}
+                        <section className="bg-white rounded-2xl border border-neutral-200/50 shadow-2xl shadow-neutral-200/20 p-6 transition-all">
+                            <FAQManager value={faqs} onChange={setFaqs} />
+                        </section>
                     </main>
 
                     {/* Minimal Sidebar */}
@@ -431,6 +538,15 @@ export default function BlogPage() {
 
                         {/* Extra Actions */}
                         <div className="pt-8 flex flex-col gap-2">
+                            <Button
+                                onClick={() => setHistoryOpen(true)}
+                                variant="ghost"
+                                className="w-full justify-between text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 text-[10px] font-bold uppercase tracking-widest"
+                            >
+                                <span>History of Changes</span>
+                                <History className="w-3.5 h-3.5" />
+                            </Button>
+
                             <Button variant="ghost" className="w-full justify-between text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 text-[10px] font-bold uppercase tracking-widest">
                                 <span>Preview Article</span>
                                 <ExternalLink className="w-3 h-3" />
@@ -439,6 +555,110 @@ export default function BlogPage() {
                     </aside>
                 </div>
             </div>
+
+            {/* Change History Dialog */}
+            <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+                <DialogContent className="max-w-2xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 shadow-2xl rounded-2xl p-6 sm:rounded-2xl">
+                    <DialogHeader className="border-b border-neutral-100 dark:border-neutral-900 pb-4">
+                        <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-xl bg-neutral-100 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400">
+                                <History className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <DialogTitle className="text-lg font-bold text-neutral-900 dark:text-neutral-100">History of Changes</DialogTitle>
+                                <DialogDescription className="text-xs text-neutral-500 dark:text-neutral-400">
+                                    Track who edited what and when on this blog post.
+                                </DialogDescription>
+                            </div>
+                        </div>
+                    </DialogHeader>
+
+                    {loadingHistory ? (
+                        <div className="h-60 flex flex-col items-center justify-center gap-3">
+                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-200 border-t-neutral-800 dark:border-neutral-800 dark:border-t-neutral-200" />
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Loading History</p>
+                        </div>
+                    ) : historyLogs.length === 0 ? (
+                        <div className="h-60 flex flex-col items-center justify-center gap-2 text-center">
+                            <History className="w-8 h-8 text-neutral-300 dark:text-neutral-700 animate-pulse" />
+                            <p className="text-sm font-semibold text-neutral-500 dark:text-neutral-400">No History Records</p>
+                            <p className="text-xs text-neutral-400 max-w-[280px]">Any future edits made to this article will appear here in a structured timeline.</p>
+                        </div>
+                    ) : (
+                        <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-6 mt-4 scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-neutral-800">
+                            {groupChangesBySession(historyLogs).map((group, groupIdx) => (
+                                <div key={groupIdx} className="relative pl-6 pb-2 border-l border-neutral-200 dark:border-neutral-800 last:border-l-transparent">
+                                    {/* Timeline dot */}
+                                    <div className="absolute left-[6.5px] top-1.5 w-3 h-3 rounded-full border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 flex items-center justify-center">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-neutral-900 dark:bg-neutral-100" />
+                                    </div>
+
+                                    {/* Group Card */}
+                                    <div className="bg-neutral-50/50 dark:bg-neutral-900/20 border border-neutral-200/50 dark:border-neutral-800/50 rounded-2xl p-4 space-y-4 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all">
+                                        {/* Header: User & Time */}
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="h-8 w-8 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center overflow-hidden">
+                                                    {group.user.profile_image ? (
+                                                        <img src={group.user.profile_image} alt="" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <span className="text-[10px] font-bold text-neutral-500 uppercase">
+                                                            {group.user.name ? group.user.name.substring(0, 2) : 'US'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
+                                                        {group.user.name || 'Unknown User'}
+                                                    </span>
+                                                    <span className="text-[9px] text-neutral-400">
+                                                        {group.user.email}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 bg-neutral-100 dark:bg-neutral-900 px-2 py-0.5 rounded-md border border-neutral-200/50 dark:border-neutral-800/50">
+                                                {format(new Date(group.timestamp), "MMM d, h:mm a")}
+                                            </span>
+                                        </div>
+
+                                        {/* Changes list */}
+                                        <div className="space-y-3 pl-2.5 border-l-2 border-neutral-200/50 dark:border-neutral-800/50">
+                                            {group.changes.map((log: any, logIdx: number) => (
+                                                <div key={logIdx} className="flex flex-col gap-1 text-xs">
+                                                    <span className="font-black text-neutral-400 uppercase tracking-widest text-[8px]">
+                                                        {fieldLabels[log.field_name] || log.field_name}
+                                                    </span>
+                                                    {log.field_name === 'content' ? (
+                                                        <span className="text-neutral-600 dark:text-neutral-400 font-medium">
+                                                            Updated the article body content
+                                                        </span>
+                                                    ) : (
+                                                        <div className="flex items-center gap-2 flex-wrap text-neutral-700 dark:text-neutral-300">
+                                                            {log.old_value ? (
+                                                                <>
+                                                                    <span className="line-through opacity-60 bg-neutral-100/50 dark:bg-neutral-800/50 px-1.5 py-0.5 rounded text-[11px] font-medium max-w-[200px] truncate">
+                                                                        {formatValue(log.field_name, log.old_value)}
+                                                                    </span>
+                                                                    <span className="text-neutral-400">→</span>
+                                                                </>
+                                                            ) : (
+                                                                <span className="text-neutral-400 italic text-[11px]">Set to</span>
+                                                            )}
+                                                            <span className="font-bold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 px-1.5 py-0.5 rounded text-[11px] max-w-[250px] truncate">
+                                                                {formatValue(log.field_name, log.new_value)}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

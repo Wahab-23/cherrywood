@@ -9,6 +9,7 @@ interface Params {
 interface PageUpdateInput {
     title?: string;
     slug?: string;
+    template?: string;
     content?: string;
     meta_title?: string;
     meta_description?: string;
@@ -16,6 +17,7 @@ interface PageUpdateInput {
     og_description?: string;
     og_image?: string;
     status?: string;
+    faqs?: string;
 }
 
 export async function GET(request: NextRequest, { params }: { params: Promise<Params> }) {
@@ -58,6 +60,20 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     try {
         const { id } = await params;
+
+        const existingPage = await prisma.page.findUnique({
+            where: { id }
+        });
+
+        if (!existingPage) {
+            return NextResponse.json({ success: false, error: "Page not found" }, { status: 404 });
+        }
+
+        const COMPULSORY_SLUGS = ['home', 'homepage', 'contact', 'contact-us', 'careers', 'terms', 'terms-and-conditions', 'privacy', 'privacy-policy', 'journal', 'blogs', 'blog'];
+        if (COMPULSORY_SLUGS.includes((existingPage.slug || '').toLowerCase())) {
+            return NextResponse.json({ success: false, error: "Compulsory layout pages cannot be deleted." }, { status: 400 });
+        }
+
         const page = await prisma.page.delete({
             where: { id }
         });

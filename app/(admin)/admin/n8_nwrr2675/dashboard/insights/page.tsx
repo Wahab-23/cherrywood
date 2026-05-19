@@ -1,5 +1,4 @@
 "use client"
-//just for testing
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
     Card,
@@ -23,16 +22,12 @@ import {
     Monitor,
     Smartphone,
     Search,
-    Filter,
-    Download,
     MousePointer2,
-    UserCheck,
     TrendingUp,
     TrendingDown,
     Clock,
     Users,
-    Percent,
-    ArrowUpRight,
+    Percent
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DatePickerWithRange } from '@/components/ui/date-range-picker'
@@ -264,6 +259,7 @@ export default function InsightsPage() {
     const [chartsLoading, setChartsLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
     const [isDateLoaded, setIsDateLoaded] = useState(false)
+    const [isMounted, setIsMounted] = useState(false)
 
     const [date, setDate] = useState<DateRange | undefined>({
         from: subDays(new Date(), 7),
@@ -291,6 +287,7 @@ export default function InsightsPage() {
             }
         }
         setIsDateLoaded(true)
+        setIsMounted(true)
     }, [])
 
     // Save to local storage on change
@@ -489,14 +486,14 @@ export default function InsightsPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-0">
-                        {chartsLoading ? (
+                        {chartsLoading || !isMounted ? (
                             <div className="h-56 bg-slate-50 dark:bg-slate-800/50 rounded-xl animate-pulse" />
                         ) : timeseries.length === 0 ? (
                             <div className="h-56 flex items-center justify-center text-slate-400 text-sm font-medium">
                                 No data for selected range
                             </div>
                         ) : (
-                            <ResponsiveContainer width="100%" height={224}>
+                            <ResponsiveContainer width="100%" height={224} initialDimension={{ width: 100, height: 224 }}>
                                 <LineChart data={timeseries} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" />
                                     <XAxis
@@ -549,11 +546,11 @@ export default function InsightsPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-0">
-                        {loading ? (
+                        {loading || !isMounted ? (
                             <div className="h-56 bg-slate-50 dark:bg-slate-800/50 rounded-xl animate-pulse" />
                         ) : (
                             <>
-                                <ResponsiveContainer width="100%" height={160}>
+                                <ResponsiveContainer width="100%" height={160} initialDimension={{ width: 100, height: 160 }}>
                                     <PieChart>
                                         <Pie
                                             data={deviceData}
@@ -617,14 +614,14 @@ export default function InsightsPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
-                    {chartsLoading ? (
+                    {chartsLoading || !isMounted ? (
                         <div className="h-40 bg-slate-50 dark:bg-slate-800/50 rounded-xl animate-pulse" />
                     ) : osStats.length === 0 ? (
                         <div className="h-40 flex items-center justify-center text-slate-400 text-sm font-medium">
                             No data for selected range
                         </div>
                     ) : (
-                        <ResponsiveContainer width="100%" height={160}>
+                        <ResponsiveContainer width="100%" height={160} initialDimension={{ width: 100, height: 160 }}>
                             <BarChart
                                 data={osStats}
                                 layout="vertical"

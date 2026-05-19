@@ -9,13 +9,16 @@ interface Params {
 interface ProjectUpdateInput {
     title?: string;
     slug?: string;
-    content?: string;
-    meta_title?: string;
-    meta_description?: string;
-    og_title?: string;
-    og_description?: string;
-    og_image?: string;
+    location?: string;
+    type?: string;
     status?: string;
+    start_date?: string | Date | null;
+    expected_completion?: string | Date | null;
+    total_units?: number | null;
+    hero_image?: string | null;
+    description?: string | null;
+    meta_title?: string | null;
+    meta_description?: string | null;
 }
 
 export async function GET(
@@ -47,10 +50,27 @@ export async function PUT(
 
     try {
         const { id } = await params;
-        const body: ProjectUpdateInput = await request.json();
+        const body = await request.json();
+        
+        // Parse types properly
+        const updateData: any = { ...body };
+        if (updateData.total_units !== undefined) {
+            updateData.total_units = updateData.total_units !== null && updateData.total_units !== "" 
+                ? Number(updateData.total_units) 
+                : null;
+        }
+        
+        if (updateData.start_date !== undefined) {
+            updateData.start_date = updateData.start_date ? new Date(updateData.start_date) : null;
+        }
+        
+        if (updateData.expected_completion !== undefined) {
+            updateData.expected_completion = updateData.expected_completion ? new Date(updateData.expected_completion) : null;
+        }
+
         const project = await prisma.project.update({
             where: { id },
-            data: body,
+            data: updateData,
         });
         return NextResponse.json({ success: true, data: project });
     } catch (error: any) {

@@ -87,3 +87,25 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ─── Storefront: marquee ticker ───────────────────────────────────────────── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ─── Storefront: smooth image drops ──────────────────────────────────────── */
+.storefront-layout img {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Storefront: Shimmer button animation ────────────────────────────────── */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2.2s infinite;
+}
