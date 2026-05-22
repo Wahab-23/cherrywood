@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { Mail, Phone, Clock, MapPin, Briefcase, Heart, Shield, Scale, ArrowRight, Calendar, Sparkles } from 'lucide-react'
+import { Mail, Phone, Clock, MapPin, Briefcase, Heart, Shield, Scale, ArrowRight, Calendar, Sparkles, Compass, Hammer } from 'lucide-react'
 import BlockNoteRenderer from "@/components/blocknote/BlockNoteRenderer";
 
 interface PageProps {
@@ -69,6 +69,8 @@ export default async function StorefrontPage({ params }: PageProps) {
     template = 'policy'
   } else if (slug === 'journal' || slug === 'blogs' || slug === 'blog') {
     template = 'journal'
+  } else if (slug === 'about' || slug === 'about-us') {
+    template = 'about'
   }
 
   if (page.content) {
@@ -93,16 +95,16 @@ export default async function StorefrontPage({ params }: PageProps) {
   }
 
   return (
-    <div className="bg-[#fcfbfc] text-[#0d1b2e] min-h-screen pt-28 pb-6 selection:bg-[#0d1b2e] selection:text-white">
+    <div className="bg-[#fcfbf8] text-[#0d1b2e] min-h-screen pt-36 lg:pt-48 pb-20 selection:bg-[#0d1b2e] selection:text-white">
       {/* ──────────────────────────────────────────────────────────────────
           TEMPLATE 1: CONTACT DIRECTORY
       ────────────────────────────────────────────────────────────────── */}
       {template === 'contact' && (
-        <div className="max-w-7xl mx-auto px-6 space-y-16">
+        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28 space-y-16">
           {/* Header */}
           <div className="max-w-3xl space-y-4">
-            <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-600/80">REACH OUT</span>
-            <h1 className="text-5xl md:text-6xl font-serif tracking-tight text-[#0d1b2e]">
+            <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Reach Out</span>
+            <h1 className="font-display text-5xl md:text-6xl font-light tracking-tight text-[#0d1b2e]">
               {data.hero_title || page.title || 'Contact Our Advisory'}
             </h1>
             <p className="text-lg text-slate-500 font-medium leading-relaxed">
@@ -113,7 +115,7 @@ export default async function StorefrontPage({ params }: PageProps) {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
             {/* Contact details */}
             <div className="lg:col-span-1 space-y-8 bg-[#0d1b2e] text-white p-8 rounded-3xl shadow-xl shadow-[#0d1b2e]/5">
-              <h3 className="text-xl font-serif text-amber-500">Concierge Desk</h3>
+              <h3 className="text-xl font-display text-[#c9a84c]">Concierge Desk</h3>
               <p className="text-sm text-slate-300 font-medium leading-relaxed">
                 Our luxury advisors are available for spatial consultation, private previews, and investor inquiries.
               </p>
@@ -156,7 +158,7 @@ export default async function StorefrontPage({ params }: PageProps) {
 
             {/* Department grid */}
             <div className="lg:col-span-2 space-y-6">
-              <h3 className="text-2xl font-serif text-[#0d1b2e] pb-2 border-b border-slate-100">Specific Advisories</h3>
+              <h3 className="font-display text-2xl font-light text-[#0d1b2e] pb-2 border-b border-neutral-100">Specific Advisories</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {(data.departments || []).map((dep: any, i: number) => (
@@ -200,11 +202,11 @@ export default async function StorefrontPage({ params }: PageProps) {
           TEMPLATE 2: CAREERS PAGE
       ────────────────────────────────────────────────────────────────── */}
       {template === 'careers' && (
-        <div className="max-w-7xl mx-auto px-6 space-y-20">
+        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28 space-y-20">
           {/* Header */}
           <div className="max-w-3xl space-y-4">
-            <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-600/80">JOIN CHERRYWOOD</span>
-            <h1 className="text-5xl md:text-6xl font-serif tracking-tight text-[#0d1b2e]">
+            <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Join Cherrywood</span>
+            <h1 className="font-display text-5xl md:text-6xl font-light tracking-tight text-[#0d1b2e]">
               {data.hero_title || page.title || 'Shape the Future'}
             </h1>
             <p className="text-lg text-slate-500 font-medium leading-relaxed">
@@ -277,36 +279,38 @@ export default async function StorefrontPage({ params }: PageProps) {
           TEMPLATE 3: POLICY & TERMS
       ────────────────────────────────────────────────────────────────── */}
       {template === 'policy' && (
-        <div className="max-w-5xl mx-auto px-6 space-y-12">
-          {/* Header */}
-          <div className="space-y-4 border-b border-slate-100 pb-8">
-            <span className="text-[11px] font-black uppercase tracking-[0.25em] text-amber-600/80">POLICY COMPLIANCE</span>
-            <h1 className="text-4xl md:text-5xl font-serif tracking-tight text-[#0d1b2e] leading-tight">
-              {page.title}
-            </h1>
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
-              <Calendar className="w-4 h-4 text-slate-300" />
-              <span>Last Revised: {data.last_updated || 'May 19, 2026'}</span>
-            </div>
-            {data.subtitle && (
-              <p className="text-sm text-slate-500 font-semibold mt-2">{data.subtitle}</p>
-            )}
-          </div>
-
-          {/* Legal content grid */}
-          <div className="space-y-10">
-            {(data.sections || []).map((sec: any, i: number) => (
-              <div key={i} className="space-y-3">
-                <h3 className="text-lg font-serif text-[#0d1b2e] font-bold">{sec.title}</h3>
-                <p className="text-sm text-slate-600 font-semibold leading-relaxed whitespace-pre-wrap">
-                  {sec.content}
-                </p>
+        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28 space-y-12">
+          <div className="max-w-4xl space-y-12">
+            {/* Header */}
+            <div className="space-y-4 border-b border-slate-100 pb-8">
+              <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Policy</span>
+              <h1 className="font-display text-4xl md:text-5xl font-light tracking-tight text-[#0d1b2e] leading-tight">
+                {page.title}
+              </h1>
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
+                <Calendar className="w-4 h-4 text-slate-300" />
+                <span>Last Revised: {data.last_updated || 'May 19, 2026'}</span>
               </div>
-            ))}
+              {data.subtitle && (
+                <p className="text-sm text-slate-500 font-semibold mt-2">{data.subtitle}</p>
+              )}
+            </div>
 
-            {(!data.sections || data.sections.length === 0) && (
-              <p className="text-slate-400 text-xs font-semibold">No clauses defined.</p>
-            )}
+            {/* Legal content grid */}
+            <div className="space-y-10">
+              {(data.sections || []).map((sec: any, i: number) => (
+                <div key={i} className="space-y-3">
+                  <h3 className="text-lg font-serif text-[#0d1b2e] font-bold">{sec.title}</h3>
+                  <p className="text-sm text-slate-600 font-semibold leading-relaxed whitespace-pre-wrap">
+                    {sec.content}
+                  </p>
+                </div>
+              ))}
+
+              {(!data.sections || data.sections.length === 0) && (
+                <p className="text-slate-400 text-xs font-semibold">No clauses defined.</p>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -315,7 +319,7 @@ export default async function StorefrontPage({ params }: PageProps) {
           TEMPLATE 4: JOURNAL / BLOG ARCHIVE FEED
       ────────────────────────────────────────────────────────────────── */}
       {template === 'journal' && (
-        <div className="max-w-7xl mx-auto px-6 space-y-16">
+        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28 space-y-16">
           {/* Header */}
           <div className="max-w-3xl space-y-4">
             <span
@@ -324,7 +328,7 @@ export default async function StorefrontPage({ params }: PageProps) {
             >
               {data.tagline || 'CHERRYWOOD JOURNAL'}
             </span>
-            <h1 className="text-5xl md:text-6xl font-serif tracking-tight text-[#0d1b2e]">
+            <h1 className="font-display text-5xl md:text-6xl font-light tracking-tight text-[#0d1b2e]">
               {data.hero_title || page.title || 'The Cherrywood Journal'}
             </h1>
             <p className="text-lg text-slate-500 font-medium leading-relaxed">
@@ -378,19 +382,93 @@ export default async function StorefrontPage({ params }: PageProps) {
       )}
 
       {/* ──────────────────────────────────────────────────────────────────
-          TEMPLATE 5: DEFAULT RICH TEXT / DOCUMENT BODY
+          TEMPLATE 5: ABOUT CHERRYWOOD
       ────────────────────────────────────────────────────────────────── */}
-      {template === 'default' && (
-        <div className="max-w-4xl mx-auto px-6 space-y-12">
-          <div className="space-y-4 border-b border-slate-100 pb-8">
-            <h1 className="text-4xl md:text-5xl font-serif tracking-tight text-[#0d1b2e] leading-tight">
-              {page.title}
+      {template === 'about' && (
+        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28 space-y-24">
+
+          {/* Header */}
+          <div className="max-w-4xl space-y-6">
+            <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Our Origins</span>
+            <h1 className="font-display text-5xl md:text-7xl font-light tracking-tight text-[#0d1b2e] leading-tight">
+              Crafting sanctuaries of light, space, and structural purity.
             </h1>
+            <p className="text-lg md:text-xl text-slate-500 font-light leading-relaxed max-w-3xl">
+              We are a design-led development firm focusing on state-of-the-art residential and commercial masterpieces.
+            </p>
           </div>
 
-          <article className="prose prose-slate lg:prose-lg max-w-none prose-p:font-semibold prose-headings:font-serif prose-headings:text-[#0d1b2e] prose-a:text-[#0d1b2e] prose-strong:text-[#0d1b2e]">
-            <BlockNoteRenderer data={page.content || ''} />
-          </article>
+          <div className="w-full h-px bg-slate-100" />
+
+          {/* Core Story Two-Column */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
+            <div className="lg:col-span-5 space-y-6">
+              <h2 className="font-display text-3xl font-light text-[#0d1b2e] leading-tight">
+                An unwavering dedication to the art of building.
+              </h2>
+              <div className="w-12 h-0.5 bg-amber-500" />
+            </div>
+            <div className="lg:col-span-7 space-y-6 text-slate-500 font-medium leading-relaxed text-sm md:text-base">
+              <p>
+                Founded on the belief that the spaces we inhabit shape our daily experience, Cherrywood was born to challenge the boundaries of luxury development. We treat every structure as a sculpture, balancing structural physics with organic elements.
+              </p>
+              <p>
+                Our team collaborates with award-winning architects, master stonecarvers, and spatial consultants to execute plans that prioritize spatial flow, natural ventilation, and material honesty.
+              </p>
+            </div>
+          </div>
+
+          {/* Pillars Grid */}
+          <div className="space-y-12 pt-12">
+            <div className="max-w-2xl">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600">OUR FOUNDATIONS</span>
+              <h3 className="text-3xl font-serif text-[#0d1b2e] mt-2">Three guiding principles.</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                { title: 'Spatial Harmony', desc: 'We study daylight patterns and airflow to construct environments that elevate mood and energy, aligning architecture with nature.' },
+                { title: 'Material Honesty', desc: 'We only use materials that age with grace. Raw stones, solid timber, and unlacquered metals that develop a character unique to their environment.' },
+                { title: 'Artisanal Execution', desc: 'We partner directly with heritage workshops and independent makers, ensuring the details on every corner are crafted by hand.' }
+              ].map((p, i) => (
+                <div key={i} className="p-8 bg-white border border-slate-100 rounded-3xl shadow-xs space-y-4">
+                  <span className="block text-2xl font-serif text-amber-500/30">0{i + 1}</span>
+                  <h4 className="text-lg font-bold text-slate-900">{p.title}</h4>
+                  <p className="text-xs text-slate-500 font-semibold leading-relaxed">{p.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Dynamic Content Fallback from CMS */}
+          {page.content && page.content !== '[]' && page.content !== '""' && (
+            <div className="pt-16 border-t border-slate-100 max-w-4xl">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">Additional Notes</h4>
+              <article className="prose prose-slate lg:prose-lg max-w-none prose-p:font-semibold prose-headings:font-serif prose-headings:text-[#0d1b2e] prose-a:text-[#0d1b2e] prose-strong:text-[#0d1b2e]">
+                <BlockNoteRenderer data={page.content} />
+              </article>
+            </div>
+          )}
+
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────────────
+          TEMPLATE 6: DEFAULT RICH TEXT / DOCUMENT BODY
+      ────────────────────────────────────────────────────────────────── */}
+      {template === 'default' && (
+        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28 space-y-12">
+          <div className="max-w-4xl space-y-12">
+            <div className="space-y-4 border-b border-slate-100 pb-8">
+              <h1 className="font-display text-4xl md:text-5xl font-light tracking-tight text-[#0d1b2e] leading-tight">
+                {page.title}
+              </h1>
+            </div>
+
+            <article className="prose prose-slate lg:prose-lg max-w-none prose-p:font-semibold prose-headings:font-serif prose-headings:text-[#0d1b2e] prose-a:text-[#0d1b2e] prose-strong:text-[#0d1b2e]">
+              <BlockNoteRenderer data={page.content || ''} />
+            </article>
+          </div>
         </div>
       )}
 
@@ -398,31 +476,33 @@ export default async function StorefrontPage({ params }: PageProps) {
           COLLAPSIBLE ACCORDION FAQ SECTION
       ────────────────────────────────────────────────────────────────── */}
       {faqs.length > 0 && (
-        <div className="max-w-3xl mx-auto px-6 mt-20 pt-16 border-t border-slate-100 space-y-8">
-          <div className="text-center space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">INQUIRIES</span>
-            <h3 className="text-3xl font-serif text-[#0d1b2e]">Frequently Asked Questions</h3>
-          </div>
+        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28 mt-24 pt-16 border-t border-slate-100 space-y-8">
+          <div className="max-w-3xl space-y-8">
+            <div className="text-center space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">INQUIRIES</span>
+              <h3 className="text-3xl font-serif text-[#0d1b2e]">Frequently Asked Questions</h3>
+            </div>
 
-          <div className="space-y-4">
-            {faqs.map((faq, i) => (
-              <details
-                key={i}
-                className="group border border-slate-100 bg-white rounded-2xl p-5 shadow-sm [&_summary::-webkit-details-marker]:hidden cursor-pointer"
-              >
-                <summary className="flex items-center justify-between gap-1.5 focus:outline-none">
-                  <h4 className="font-extrabold text-slate-800 text-sm md:text-base leading-snug">{faq.question}</h4>
-                  <span className="shrink-0 rounded-full bg-slate-50 p-1.5 text-slate-900 group-open:rotate-180 transition-all duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </span>
-                </summary>
-                <p className="mt-3 text-xs md:text-sm font-semibold leading-relaxed text-slate-500 border-t border-slate-50 pt-3">
-                  {faq.answer}
-                </p>
-              </details>
-            ))}
+            <div className="space-y-4">
+              {faqs.map((faq, i) => (
+                <details
+                  key={i}
+                  className="group border border-slate-100 bg-white rounded-2xl p-5 shadow-sm [&_summary::-webkit-details-marker]:hidden cursor-pointer"
+                >
+                  <summary className="flex items-center justify-between gap-1.5 focus:outline-none">
+                    <h4 className="font-extrabold text-slate-800 text-sm md:text-base leading-snug">{faq.question}</h4>
+                    <span className="shrink-0 rounded-full bg-slate-50 p-1.5 text-slate-900 group-open:rotate-180 transition-all duration-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </span>
+                  </summary>
+                  <p className="mt-3 text-xs md:text-sm font-semibold leading-relaxed text-slate-500 border-t border-slate-50 pt-3">
+                    {faq.answer}
+                  </p>
+                </details>
+              ))}
+            </div>
           </div>
         </div>
       )}

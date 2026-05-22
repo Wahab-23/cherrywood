@@ -76,14 +76,26 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-cormorant);
   --font-mono: var(--font-geist-mono);
 }
 
+/* ─── Cherrywood design tokens ─────────────────────────────────────────────── */
+:root {
+  --cw-navy:    #0d1b2e;
+  --cw-gold:    #c9a84c;
+  --cw-gold-dk: #b8973d;
+  --cw-cream:   #fcfbf8;
+  --cw-offwhite:#f7f5f0;
+  --cw-serif:   var(--font-cormorant), 'Georgia', serif;
+  --cw-sans:    var(--font-inter), 'Helvetica Neue', Arial, sans-serif;
+}
+
 body {
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--cw-cream);
+  color: var(--cw-navy);
+  font-family: var(--cw-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -94,18 +106,164 @@ body {
   to   { transform: translateX(-50%); }
 }
 
-/* ─── Storefront: smooth image drops ──────────────────────────────────────── */
-.storefront-layout img {
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ─── Storefront: Shimmer button animation ────────────────────────────────── */
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
+/* ─── Scroll-reveal fade-in-up ────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* ─── Staggered delay helpers ─────────────────────────────────────────────── */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-700 { animation-delay: 0.7s; }
+
+/* ─── Storefront: Shimmer button animation ────────────────────────────────── */
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
 .animate-shimmer {
   animation: shimmer 2.2s infinite;
+}
+
+/* ─── Storefront image smoothing ──────────────────────────────────────────── */
+.storefront-layout img {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* ─── Serif utility ───────────────────────────────────────────────────────── */
+.font-display {
+  font-family: var(--cw-serif);
+}
+
+/* ─── Custom Typography styles for BlockNote & HTML ──────────────────────── */
+.prose {
+  color: #334155; /* Slate-700 */
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.prose p {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  font-weight: 300; /* Font-light for elegant look */
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  color: #0d1b2e;
+  font-weight: 800;
+  line-height: 1.25;
+  margin-bottom: 0.5em;
+  letter-spacing: -0.02em;
+}
+
+.prose h1 {
+  font-size: 2.25em;
+  margin-top: 1.8em;
+}
+
+.prose h2 {
+  font-size: 1.75em;
+  margin-top: 1.6em;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.4em;
+}
+
+.prose h3 {
+  font-size: 1.35em;
+  margin-top: 1.5em;
+}
+
+.prose strong, .prose b {
+  font-weight: 700;
+  color: #0d1b2e;
+}
+
+.prose a {
+  color: #c9a84c;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.prose a:hover {
+  color: #b8973d;
+}
+
+.prose blockquote {
+  font-weight: 300;
+  font-style: italic;
+  color: #475569;
+  border-left: 3px solid #c9a84c;
+  padding-left: 1.5em;
+  margin: 2em 0;
+  font-size: 1.1em;
+  line-height: 1.6;
+}
+
+.prose ul {
+  list-style-type: disc;
+  margin: 1.5em 0;
+  padding-left: 1.75em;
+}
+
+.prose ol {
+  list-style-type: decimal;
+  margin: 1.5em 0;
+  padding-left: 1.75em;
+}
+
+.prose li {
+  margin: 0.5em 0;
+  padding-left: 0.25em;
+}
+
+.prose li::marker {
+  color: #c9a84c;
+}
+
+.prose img {
+  margin: 2.5em auto;
+  border-radius: 1rem;
+  max-width: 100%;
+  height: auto;
+  box-shadow: 0 4px 20px -2px rgba(13, 27, 46, 0.05);
+}
+
+.prose pre {
+  background-color: #f8fafc; /* Slate-50 */
+  border: 1px solid #f1f5f9;
+  padding: 1.25em;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  margin: 2em 0;
+}
+
+.prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background-color: #f1f5f9;
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+  font-size: 0.85em;
+  color: #0d1b2e;
+}
+
+.prose pre code {
+  background-color: transparent;
+  padding: 0;
+  font-size: 0.9em;
+  color: inherit;
 }

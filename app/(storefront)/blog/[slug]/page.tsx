@@ -101,7 +101,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="bg-[#fcfbfc] text-[#0d1b2e] min-h-screen pt-28 pb-20 selection:bg-[#0d1b2e] selection:text-white">
+    <div className="bg-[#fcfbf8] text-[#0d1b2e] min-h-screen pt-36 lg:pt-48 pb-20 selection:bg-[#0d1b2e] selection:text-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -111,19 +111,19 @@ export default async function BlogDetailPage({ params }: PageProps) {
         {/* Back Link */}
         <Link
           href="/journal"
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 text-xs font-bold uppercase tracking-widest transition-colors"
+          className="inline-flex items-center gap-2 text-slate-400 hover:text-[#0d1b2e] text-[10px] font-bold uppercase tracking-widest transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Journal
         </Link>
 
         {/* Article Meta Header */}
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-400">
-            <span className="bg-amber-50 border border-amber-200/50 text-[#c9a84c] px-3 py-1 rounded-full uppercase tracking-wider">
+          <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <span className="bg-[#c9a84c] text-[#0d1b2e] px-3 py-1 font-black">
               {blog.category.name}
             </span>
-            <div className="flex items-center gap-1">
-              <Calendar className="w-4 h-4 text-slate-300" />
+            <div className="flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-[#c9a84c]" />
               <span>
                 {new Date(blog.published_at || blog.created_at).toLocaleDateString('en-US', {
                   month: 'long',
@@ -132,18 +132,18 @@ export default async function BlogDetailPage({ params }: PageProps) {
                 })}
               </span>
             </div>
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4 text-slate-300" />
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-[#c9a84c]" />
               <span>{readingTime} min read</span>
             </div>
           </div>
 
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-[#0d1b2e] leading-tight tracking-tight">
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-light text-[#0d1b2e] leading-tight tracking-tight">
             {blog.title}
           </h1>
 
           {blog.short_description && (
-            <p className="text-lg text-slate-500 font-medium leading-relaxed border-l-2 border-amber-500 pl-4 py-1">
+            <p className="text-lg text-slate-500 font-light leading-relaxed border-l-2 border-[#c9a84c] pl-4 py-1">
               {blog.short_description}
             </p>
           )}
@@ -151,7 +151,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
 
         {/* Cover Image */}
         {blog.hero_image && (
-          <div className="aspect-21/9 rounded-3xl overflow-hidden bg-slate-100 shadow-sm">
+          <div className="aspect-21/9 overflow-hidden bg-slate-100 shadow-sm border border-neutral-100">
             <img
               src={blog.hero_image}
               alt={blog.title}
@@ -161,7 +161,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
         )}
 
         {/* Content Body */}
-        <div className="prose prose-slate lg:prose-lg max-w-none prose-p:font-semibold prose-headings:font-serif prose-headings:text-[#0d1b2e] prose-a:text-[#0d1b2e] prose-strong:text-[#0d1b2e] pt-6">
+        <div className="prose prose-slate lg:prose-lg max-w-none prose-p:font-light prose-headings:font-display prose-headings:font-light prose-headings:text-[#0d1b2e] prose-a:text-[#0d1b2e] prose-strong:text-[#0d1b2e] pt-6">
           <BlockNoteRenderer data={blog.content || ''} />
         </div>
 
@@ -172,11 +172,11 @@ export default async function BlogDetailPage({ params }: PageProps) {
               <img
                 src={blog.author.profile_image}
                 alt={blog.author.name || 'Author'}
-                className="w-12 h-12 rounded-full object-cover bg-slate-100"
+                className="w-12 h-12 rounded-none object-cover bg-slate-100"
               />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-[#c9a84c]">
-                <User className="w-6 h-6" />
+              <div className="w-12 h-12 rounded-none bg-[#f4f1ea] flex items-center justify-center text-[#c9a84c]">
+                <User className="w-5 h-5" />
               </div>
             )}
             <div>

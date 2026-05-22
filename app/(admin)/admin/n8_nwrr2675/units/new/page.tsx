@@ -302,7 +302,7 @@ export default function NewUnitPage() {
             <CardContent className="p-8">
               <div className="space-y-2">
                 <Label htmlFor="price" className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Valuation Cost (USD)
+                  Valuation Cost (PKR)
                 </Label>
                 <div className="relative">
                   <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />

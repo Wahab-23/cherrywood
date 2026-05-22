@@ -115,7 +115,7 @@ export default function UnitsPage() {
     if (!priceVal) return 'N/A'
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'PKR',
       maximumFractionDigits: 0
     }).format(Number(priceVal))
   }

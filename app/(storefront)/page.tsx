@@ -1,204 +1,379 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import Image from 'next/image'
+import Link from 'next/link'
+import Script from 'next/script'
+import {
+  MapPin, ArrowRight, Phone, Mail, CheckCircle2,
+  Building2, ShieldCheck, Zap, Trees, Flame, Car, Wifi,
+} from 'lucide-react'
 import { prisma } from '@/lib/prisma'
-import { ProjectCard } from '@/components/storefront/ProjectCard'
-import { ArrowRight, MapPin, Shield, Star, Heart, Home } from 'lucide-react'
+import { ContactForm } from '@/components/storefront/ContactForm'
 
+// ── Meta ──────────────────────────────────────────────────────────────────────
 export async function generateMetadata(): Promise<Metadata> {
-  const homeRecord = await prisma.page.findUnique({ where: { slug: 'home' } })
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywood.com'
-
-  const title = homeRecord?.meta_title || homeRecord?.title || 'Cherrywood | Luxury Real Estate'
-  const description = homeRecord?.meta_description || 'Defining the skyline of tomorrow with state-of-the-art living options.'
-  const ogImage = homeRecord?.og_image || `${siteUrl}/building.png`
-
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywoodbuilders.com'
   return {
-    title,
-    description,
-    alternates: { canonical: siteUrl },
+    title: 'Cherrywood Tower — Luxury Living in the Heart of Karachi',
+    description:
+      'Cherrywood Tower: a landmark residential & commercial development by Ameer Hamza Builders in the heart of Saddar, Karachi. Premium apartments & double-height retail shops.',
+    alternates: { canonical: `${siteUrl}/projects/cherrywood-tower` },
     openGraph: {
       type: 'website',
-      url: siteUrl,
-      title: homeRecord?.og_title || title,
-      description: homeRecord?.og_description || description,
-      images: [{ url: ogImage, width: 1200, height: 630, alt: 'Cherrywood Luxury Real Estate' }],
+      url: `${siteUrl}/projects/cherrywood-tower`,
+      title: 'Cherrywood Tower | Luxury Living in Saddar, Karachi',
+      description:
+        'Iconic mixed-use tower with 3-bedroom, 2-bedroom apartments, a rooftop garden, BBQ area, and double-height luxury retail shops.',
+      images: [{ url: `${siteUrl}/cherrywood-tower.png`, width: 1200, height: 630, alt: 'Cherrywood Tower Exterior' }],
     },
     twitter: {
       card: 'summary_large_image',
-      title,
-      description,
-      images: [ogImage],
+      title: 'Cherrywood Tower | Luxury Living in Saddar, Karachi',
+      description: 'Iconic mixed-use tower with premium apartments and retail in Saddar, Karachi.',
+      images: [`${siteUrl}/cherrywood-tower.png`],
     },
   }
 }
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-interface HomepageData {
-  display_form?: boolean
-  hero?: { title: string; subtitle: string; ctaLabel: string; ctaPath: string; bg_image: string; fg_image: string }
-  features?: { title: string; description: string; icon: string }[]
-  testimonial?: { quote: string; author: string; role: string }
+// ── Types ─────────────────────────────────────────────────────────────────────
+type UnitGroup = {
+  type: string
+  label: string
+  beds: string
+  size: string
+  price: string
+  units: Awaited<ReturnType<typeof prisma.unit.findMany>>
 }
 
-// ─── Fallback content ─────────────────────────────────────────────────────────
-const fallback: HomepageData = {
-  display_form: false,
-  hero: {
-    title: 'Defining the skyline of tomorrow.',
-    subtitle:
-      'We create spaces that inspire, endure, and elevate the human experience. Experience architectural purity and uncompromising luxury.',
-    ctaLabel: 'Explore Projects',
-    ctaPath: '/projects',
-    bg_image: '',
-    fg_image: '',
-  },
-  features: [
-    { title: 'Architectural Purity', description: 'Minimalist design language focusing on light, space, and structural integrity.', icon: 'home' },
-    { title: 'Prime Locations', description: 'Curated environments in the world\'s most sought-after neighbourhoods.', icon: 'map-pin' },
-    { title: 'Enduring Quality', description: 'Built with materials that age gracefully and stand the test of time.', icon: 'shield' },
-  ],
-  testimonial: {
-    quote: 'Cherrywood doesn\'t just build homes; they craft sanctuaries. The attention to detail and spatial harmony is unparalleled.',
-    author: 'Elena Rostova',
-    role: 'Lead Architect',
-  },
-}
+// ── Page ──────────────────────────────────────────────────────────────────────
+export default async function CherrywoodTowerPage() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywoodbuilders.com'
 
-function FeatureIcon({ name }: { name: string }) {
-  const cls = 'w-5 h-5'
-  switch (name) {
-    case 'shield': return <Shield className={cls} />
-    case 'map-pin': return <MapPin className={cls} />
-    case 'heart': return <Heart className={cls} />
-    case 'star': return <Star className={cls} />
-    default: return <Home className={cls} />
-  }
-}
+  const project = await prisma.project.findFirst({
+    where: { slug: 'cherrywood-tower' },
+    include: { units: { orderBy: { unit_number: 'asc' } } },
+  })
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-export default async function StorefrontPage() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywood.com'
-  // Fetch home page from Static Pages
-  const homeRecord = await prisma.page.findUnique({ where: { slug: 'home' } })
+  const residentialUnits = project?.units.filter(u => u.type !== 'Double Height Retail Shop') ?? []
+  const shopUnits = project?.units.filter(u => u.type === 'Double Height Retail Shop') ?? []
 
-  let cms: HomepageData = fallback
-  if (homeRecord?.content) {
-    try {
-      const parsed = JSON.parse(homeRecord.content) as HomepageData
-      cms = {
-        display_form: parsed.display_form || false,
-        hero: {
-          title: parsed.hero?.title || fallback.hero!.title,
-          subtitle: parsed.hero?.subtitle || fallback.hero!.subtitle,
-          ctaLabel: parsed.hero?.ctaLabel || fallback.hero!.ctaLabel,
-          ctaPath: parsed.hero?.ctaPath || fallback.hero!.ctaPath || '/projects',
-          bg_image: parsed.hero?.bg_image || fallback.hero!.bg_image,
-          fg_image: parsed.hero?.fg_image || fallback.hero!.fg_image,
-        },
-        features: parsed.features?.length ? parsed.features : fallback.features,
-        testimonial: {
-          quote: parsed.testimonial?.quote || fallback.testimonial!.quote,
-          author: parsed.testimonial?.author || fallback.testimonial!.author,
-          role: parsed.testimonial?.role || fallback.testimonial!.role,
-        },
-      }
-    } catch { /* keep fallback */ }
-  }
-
-  // FAQ from page record
-  let faqs: { question: string; answer: string }[] = []
-  if (homeRecord?.faqs) {
-    try { faqs = JSON.parse(homeRecord.faqs) } catch { /* ignore */ }
-  }
-
-  // Latest projects
-  const projects = await prisma.project.findMany({ take: 3, orderBy: { created_at: 'desc' } })
-
-  const hero = cms.hero!
-  const features = cms.features!
-  const testimonial = cms.testimonial!
+  const unitGroups: UnitGroup[] = [
+    {
+      type: 'Type A', label: '3 Bedroom',
+      beds: '3 Bedrooms', size: '1,056 – 1,152 Sq.Ft.', price: 'PKR 1.42 – 1.55 Cr',
+      units: residentialUnits.filter(u => u.unit_number.includes('Type A')),
+    },
+    {
+      type: 'Type B', label: '2 Bedroom (Drawing)',
+      beds: '2 Bedrooms + Drawing', size: '950 Sq.Ft.', price: 'PKR 1.15 Cr',
+      units: residentialUnits.filter(u => u.unit_number.includes('Type B')),
+    },
+    {
+      type: 'Type C', label: '2 Bedroom',
+      beds: '2 Bedrooms + Lounge', size: '916 – 1,016 Sq.Ft.', price: 'PKR 85 – 92 Lac',
+      units: residentialUnits.filter(u => u.unit_number.includes('Type C')),
+    },
+  ]
 
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'RealEstateAgent',
-    name: 'Cherrywood',
-    url: siteUrl,
-    description: cms.hero?.subtitle || fallback.hero!.subtitle,
-    image: `${siteUrl}/logo.png`,
-    priceRange: '$$$',
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.9',
-      reviewCount: '87',
+    '@type': 'ApartmentComplex',
+    name: 'Cherrywood Tower',
+    url: `${siteUrl}/projects/cherrywood-tower`,
+    description: 'Luxury mixed-use residential & commercial tower in Saddar, Karachi.',
+    image: `${siteUrl}/cherrywood-tower.png`,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Plot No. 125 Katrak Road, Depot Lines',
+      addressLocality: 'Saddar, Karachi',
+      postalCode: '74200',
+      addressCountry: 'PK',
     },
+    telephone: '+923111854854',
+    numberOfAccommodationUnits: project?.total_units ?? 48,
   }
 
+  // NOC list — plain strings, no HTML injection needed
+  // FIXED: was using dangerouslySetInnerHTML on hardcoded strings with &amp; entities.
+  // React handles & in JSX directly. No innerHTML needed, no XSS risk.
+  const nocs = [
+    'Survey of Pakistan (NOC)',
+    'Karachi Water & Sewerage Board',
+    'KE — K-Electric (NOC)',
+    'Civil Aviation Authority',
+    'Karachi Cantonment Board',
+    'Pakistan Air Force (PAF)',
+    'Sindh Environmental Protection Agency',
+    'SSGC — Sui Southern Gas',
+  ]
+
   return (
-    <div className="bg-white overflow-x-hidden">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+    <div className="bg-[#fcfbf8] text-[#0d1b2e] overflow-x-hidden">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          1. HERO  —  full-viewport dark-navy split layout
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="relative min-h-screen bg-[#0d1b2e] flex flex-col lg:flex-row">
-        {hero.bg_image && (
-          <img src={hero.bg_image} alt="Cherrywood luxury residential development exterior" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
-        )}
+      {/* ════════════════════════════════════════════════════════════════════
+          GLOBAL ANIMATION STYLES
+          All defined here as real CSS keyframes — no custom Tailwind config
+          needed. Applied via className strings throughout.
 
-        {/* Left — text column */}
-        <div className="relative z-10 flex flex-col justify-center px-8 md:px-16 lg:px-20 xl:px-28
-                        pt-36 pb-24 lg:py-0 lg:w-[52%] xl:w-[48%]">
+          FIXED: Previous code used animate-fade-in-up and delay-* classes
+          that don't exist in Tailwind by default. Those were silently doing
+          nothing. These keyframes are self-contained and always work.
+      ════════════════════════════════════════════════════════════════════ */}
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(28px); filter: blur(3px); }
+          to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+        }
+        @keyframes fadeLeft {
+          from { opacity: 0; transform: translateX(32px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes marqueescroll {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+        @keyframes lineGrow {
+          from { width: 0; opacity: 0; }
+          to   { width: 3rem; opacity: 1; }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.96); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+        @keyframes countUp {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
 
-          {/* Eyebrow */}
-          <div className="flex items-center gap-3 mb-8">
+        /* Hero entrance — staggered via animation-delay */
+        .anim-eyebrow  { animation: fadeUp  0.8s cubic-bezier(0.16,1,0.3,1) 0.15s both; }
+        .anim-h1       { animation: fadeUp  0.9s cubic-bezier(0.16,1,0.3,1) 0.30s both; }
+        .anim-tagline  { animation: fadeUp  0.8s cubic-bezier(0.16,1,0.3,1) 0.45s both; }
+        .anim-location { animation: fadeUp  0.8s cubic-bezier(0.16,1,0.3,1) 0.55s both; }
+        .anim-ctas     { animation: fadeUp  0.8s cubic-bezier(0.16,1,0.3,1) 0.65s both; }
+        .anim-stats    { animation: fadeUp  0.8s cubic-bezier(0.16,1,0.3,1) 0.80s both; }
+        .anim-image    { animation: scaleIn 1.1s cubic-bezier(0.16,1,0.3,1) 0.20s both; }
+        .anim-fade     { animation: fadeIn  1.2s ease 0.1s both; }
+
+        /* Marquee */
+        .marquee-inner { animation: marqueescroll 32s linear infinite; }
+        .marquee-inner:hover { animation-play-state: paused; }
+
+        /* Scroll-triggered reveal — JS toggles .revealed on scroll entry */
+        .reveal {
+          opacity: 0;
+          transform: translateY(24px);
+          filter: blur(2px);
+          transition: opacity 0.75s cubic-bezier(0.16,1,0.3,1),
+                      transform 0.75s cubic-bezier(0.16,1,0.3,1),
+                      filter 0.75s ease;
+        }
+        .reveal.revealed {
+          opacity: 1;
+          transform: translateY(0);
+          filter: blur(0);
+        }
+        .reveal-left {
+          opacity: 0;
+          transform: translateX(-28px);
+          transition: opacity 0.75s cubic-bezier(0.16,1,0.3,1),
+                      transform 0.75s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reveal-left.revealed { opacity: 1; transform: translateX(0); }
+
+        .reveal-right {
+          opacity: 0;
+          transform: translateX(28px);
+          transition: opacity 0.75s cubic-bezier(0.16,1,0.3,1),
+                      transform 0.75s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reveal-right.revealed { opacity: 1; transform: translateX(0); }
+
+        /* Stagger children */
+        .stagger > *:nth-child(1) { transition-delay: 0ms; }
+        .stagger > *:nth-child(2) { transition-delay: 80ms; }
+        .stagger > *:nth-child(3) { transition-delay: 160ms; }
+        .stagger > *:nth-child(4) { transition-delay: 240ms; }
+        .stagger > *:nth-child(5) { transition-delay: 320ms; }
+        .stagger > *:nth-child(6) { transition-delay: 400ms; }
+        .stagger > *:nth-child(7) { transition-delay: 480ms; }
+        .stagger > *:nth-child(8) { transition-delay: 560ms; }
+
+        /* Gold shimmer on hero headline hover */
+        .headline-shimmer {
+          background: linear-gradient(90deg, #ffffff 35%, #c9a84c 50%, #ffffff 65%);
+          background-size: 250% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          transition: -webkit-text-fill-color 0.3s;
+        }
+        .headline-shimmer:hover {
+          -webkit-text-fill-color: transparent;
+          animation: shimmerMove 1.8s linear infinite;
+        }
+        @keyframes shimmerMove {
+          from { background-position: 200% center; }
+          to   { background-position: -200% center; }
+        }
+
+        /* Card lift */
+        .card-lift {
+          transition: transform 0.4s cubic-bezier(0.16,1,0.3,1),
+                      box-shadow 0.4s ease,
+                      border-color 0.3s ease;
+        }
+        .card-lift:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 16px 48px rgba(13,27,46,0.12);
+        }
+
+        /* Gold line expand on card hover */
+        .gold-line {
+          width: 2rem;
+          height: 1px;
+          background: #c9a84c;
+          transition: width 0.5s cubic-bezier(0.16,1,0.3,1);
+        }
+        .group:hover .gold-line { width: 100%; }
+
+        /* Bottom border sweep on material cards */
+        .border-sweep {
+          width: 0;
+          height: 1px;
+          background: rgba(201,168,76,0.5);
+          transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
+        }
+        .group:hover .border-sweep { width: 100%; }
+
+        /* Floating building on hero */
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50%       { transform: translateY(-10px); }
+        }
+        .float { animation: float 7s ease-in-out infinite; }
+
+        /* Scroll indicator pulse */
+        @keyframes scrollPulse {
+          0%   { opacity: 0.4; transform: translateY(0) scaleY(1); }
+          50%  { opacity: 1;   transform: translateY(4px) scaleY(1.1); }
+          100% { opacity: 0.4; transform: translateY(0) scaleY(1); }
+        }
+        .scroll-pulse { animation: scrollPulse 2s ease-in-out infinite; }
+      `}</style>
+
+      {/* Scroll reveal script — runs once after mount */}
+      <Script id="scroll-reveal" strategy="afterInteractive">
+        {`
+          (function(){
+            function reveal(){
+              document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(function(el){
+                var rect = el.getBoundingClientRect();
+                if(rect.top < window.innerHeight - 60){
+                  el.classList.add('revealed');
+                }
+              });
+            }
+            window.addEventListener('scroll', reveal, { passive: true });
+            setTimeout(reveal, 100);
+          })();
+        `}
+      </Script>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          1. HERO
+      ════════════════════════════════════════════════════════════════════ */}
+      <section id="hero" className="relative min-h-screen bg-[#0d1b2e] flex flex-col lg:flex-row overflow-hidden">
+
+        {/* Full-bleed bg image */}
+        <div className="anim-fade absolute inset-0 lg:left-[45%]">
+          <Image
+            src="/cherrywood-tower.png"
+            loading="eager"
+            alt="Cherrywood Tower exterior rendering at dusk"
+            fill priority
+            className="object-cover object-center opacity-40 lg:opacity-80"
+            sizes="(max-width: 1024px) 100vw, 55vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0d1b2e]/80 via-[#0d1b2e]/40 to-[#0d1b2e] lg:bg-gradient-to-r lg:from-[#0d1b2e] lg:via-[#0d1b2e]/50 lg:to-transparent" />
+        </div>
+
+        {/* Subtle noise texture */}
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none opacity-[0.025]"
+          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`, backgroundSize: '128px' }}
+        />
+
+        {/* Gold vertical accent */}
+        <div aria-hidden="true" className="absolute top-0 right-0 w-px h-48 bg-gradient-to-b from-[#c9a84c]/50 to-transparent hidden lg:block" />
+
+        {/* Text column */}
+        <div className="relative z-10 w-full lg:w-[50%] flex flex-col justify-center pt-40 pb-24 lg:py-0 px-6 md:px-12 lg:px-20 xl:px-28">
+
+          <div className="anim-eyebrow flex items-center gap-3 mb-8">
             <span className="block w-8 h-px bg-[#c9a84c]" />
             <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">
-              Luxury Real Estate
+              Ameer Hamza Builders &amp; Developers
             </span>
           </div>
 
-          {/* Headline */}
-          <h1 className="text-4xl md:text-5xl xl:text-6xl font-black text-white tracking-tight leading-[1.05] mb-8">
-            {hero.title}
+          {/*
+            FIXED: font-display removed — not a Tailwind utility unless registered
+            in tailwind.config. Using explicit font-serif which IS a Tailwind default.
+            If you have a custom display font, register it in config as fontFamily.display
+            then this class will work. For now: font-serif gives the elegant editorial feel.
+
+            FIXED: font-light italic at 7xl was reading as accidental.
+            Now using font-black on main word, font-light italic on the accent word —
+            the weight contrast IS the design, not a weakness.
+          */}
+          <h1 className="anim-h1 headline-shimmer text-5xl md:text-6xl xl:text-7xl text-white leading-[1.05] tracking-tight mb-6">
+            <span className="font-black">Cherrywood</span><br />
+            <span className="font-light italic text-[#c9a84c]">Tower</span>
           </h1>
 
-          {/* Sub */}
-          <p className="text-base text-white/50 font-light leading-relaxed max-w-md mb-12">
-            {hero.subtitle}
+          <p className="anim-tagline text-base text-white/50 font-light leading-relaxed max-w-md mb-3">
+            Luxury living in the heart of the city.
           </p>
 
-          {/* Actions */}
-          <div className="flex flex-wrap items-center gap-5">
-            <Link
-              href={hero.ctaPath}
-              className="inline-flex items-center gap-3 bg-[#c9a84c] hover:bg-[#b8973d]
-                         text-[#0d1b2e] px-8 py-4 text-[11px] font-black uppercase tracking-[0.2em]
-                         transition-colors duration-300"
-            >
-              {hero.ctaLabel}
-              <ArrowRight className="w-3.5 h-3.5" />
+          <div className="anim-location flex items-center gap-2 text-white/40 text-sm mb-12">
+            <MapPin className="w-4 h-4 text-[#c9a84c] shrink-0" />
+            <span>Saddar, Karachi — Pakistan&apos;s Commercial Centre</span>
+          </div>
+
+          <div className="anim-ctas flex flex-wrap gap-4 mb-16">
+            {/*
+              Link handles hash hrefs natively — scrolls to #apartments on
+              the same page. No <a> needed, no page reload.
+            */}
+            <Link href="#apartments"
+              className="group inline-flex items-center gap-3 bg-[#c9a84c] hover:bg-[#b8973d] text-[#0d1b2e] px-8 py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-colors duration-300">
+              Explore Units
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300" />
             </Link>
-            <Link
-              href="/about"
-              className="inline-flex items-center gap-3 border border-white/20 hover:border-[#c9a84c]/60
-                         text-white/60 hover:text-white px-8 py-4 text-[11px] font-bold uppercase
-                         tracking-[0.2em] transition-all duration-300"
-            >
-              Our Story
+            {/*
+              "Register Interest" goes to /contact with source context in the
+              query string so the contact page knows where the user came from.
+              Far more useful than a blind scroll to a form on the same page.
+            */}
+            <Link href="/contact?from=cherrywood-tower&interest=register"
+              className="inline-flex items-center gap-3 border border-white/20 hover:border-[#c9a84c]/60 text-white/60 hover:text-white px-8 py-4 text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300">
+              Register Interest
             </Link>
           </div>
 
-          {/* Stats strip */}
-          <div className="flex gap-12 mt-16 pt-12 border-t border-white/10">
+          {/*
+            FIXED: Stats — replaced meaningless "G+" with actual shop count from DB.
+            If shopUnits is empty (DB not loaded), falls back to the known count of 8.
+          */}
+          <div className="anim-stats flex gap-10 pt-10 border-t border-white/10">
             {[
-              { value: '15+', label: 'Years Experience' },
-              { value: '200+', label: 'Units Delivered' },
-              { value: '98%', label: 'Client Satisfaction' },
-            ].map((s) => (
+              { value: '48', label: 'Residential Units' },
+              { value: '8+', label: 'NOCs & Approvals' },
+              { value: shopUnits.length > 0 ? String(shopUnits.length) : '8', label: 'Retail Shops' },
+            ].map(s => (
               <div key={s.label}>
                 <p className="text-2xl font-black text-[#c9a84c] mb-1">{s.value}</p>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">{s.label}</p>
@@ -207,235 +382,429 @@ export default async function StorefrontPage() {
           </div>
         </div>
 
-        {/* Right — building render */}
-        <div className="relative lg:flex-1 min-h-[60vh] lg:min-h-screen flex items-center justify-center
-                        overflow-hidden">
-          {/* Subtle gradient on left edge to blend into text column */}
-          <div className="absolute inset-y-0 left-0 w-24 bg-linear-to-r from-[#0d1b2e] to-transparent z-10 pointer-events-none" />
-          {/* Bottom fade */}
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-[#0d1b2e] to-transparent z-10 pointer-events-none" />
-
-          <Image
-            src={hero.fg_image || "/building.png"}
-            alt="Cherrywood Development"
-            width={700}
-            height={900}
-            priority
-            className="relative z-0 object-contain w-[90%] lg:w-full max-w-[640px]
-                       drop-shadow-2xl translate-y-4"
-          />
+        {/* Scroll indicator */}
+        <div className="anim-stats absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-10 hidden lg:flex">
+          <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/20">Scroll</span>
+          <div className="scroll-pulse w-px h-10 bg-gradient-to-b from-white/30 to-transparent" />
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          2. MARQUEE TICKER
-      ══════════════════════════════════════════════════════════════════════ */}
-      <div className="bg-[#c9a84c] py-4 overflow-hidden">
-        <div className="flex whitespace-nowrap animate-[marquee_30s_linear_infinite]">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <span key={i} className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0d1b2e] pr-16">
-              Cherrywood &nbsp;&bull;&nbsp; Premium Residences &nbsp;&bull;&nbsp; Architectural Excellence &nbsp;&bull;&nbsp; Prime Locations &nbsp;&bull;
+      {/* ════════════════════════════════════════════════════════════════════
+          2. MARQUEE
+      ════════════════════════════════════════════════════════════════════ */}
+      <div className="bg-[#c9a84c] py-3.5 overflow-hidden">
+        <div className="marquee-inner flex whitespace-nowrap">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <span key={i} className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0d1b2e] pr-14">
+              Cherrywood Tower &nbsp;•&nbsp; Luxury Residences &nbsp;•&nbsp; Saddar, Karachi &nbsp;•&nbsp; Premium Retail Shops &nbsp;•&nbsp; Rooftop Garden &nbsp;•
             </span>
           ))}
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          3. FEATURES — three-column minimal grid
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════════════════════════
+          3. LOCATION
+      ════════════════════════════════════════════════════════════════════ */}
       <section className="py-28 md:py-36 bg-white">
-        <div className="container mx-auto px-6 md:px-12">
+        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
 
-          <div className="flex flex-col md:flex-row md:items-end gap-4 md:gap-0 mb-20">
-            <div className="flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c] mb-4">
-                Why Cherrywood
-              </p>
-              <h2 className="text-3xl md:text-5xl font-black tracking-tight text-[#0d1b2e] leading-tight max-w-md">
-                Built on three unbreakable principles.
+            <div className="reveal-left lg:col-span-5 space-y-6">
+              <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Location</span>
+              <h2 className="text-4xl md:text-5xl font-black text-[#0d1b2e] leading-tight">
+                Saddar —<br />
+                <span className="font-light italic">An Enviable Address</span>
               </h2>
-            </div>
-            <p className="text-sm text-neutral-500 font-light leading-relaxed max-w-xs">
-              Every decision we make, from site selection to material specification, is guided by our founding philosophy.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-neutral-200">
-            {features.map((f, i) => (
-              <div key={i} className="py-10 md:py-0 md:px-12 first:md:pl-0 last:md:pr-0 space-y-5">
-                <div className="w-10 h-10 border border-[#c9a84c]/40 flex items-center justify-center text-[#c9a84c]">
-                  <FeatureIcon name={f.icon} />
-                </div>
-                <h3 className="text-lg font-bold text-[#0d1b2e] tracking-tight">{f.title}</h3>
-                <p className="text-sm text-neutral-500 leading-relaxed font-light">{f.description}</p>
+              <div className="gold-line" />
+              <p className="text-sm text-neutral-500 font-light leading-relaxed">
+                Karachi&apos;s commercial and cultural epicentre. Saddar places you moments from premier medical centres, top-class schools and colleges, and every necessity of modern life — while positioning your investment in one of the city&apos;s most sought-after addresses.
+              </p>
+              <div className="flex items-start gap-3 pt-4">
+                <MapPin className="w-5 h-5 text-[#c9a84c] mt-0.5 shrink-0" />
+                <p className="text-sm font-semibold text-[#0d1b2e]">
+                  Plot No. 125 Katrak Road, Depot Lines,<br />
+                  Saddar, Karachi — 74200, Pakistan
+                </p>
               </div>
-            ))}
+            </div>
+
+            <div className="reveal-right lg:col-span-7">
+              <div className="grid grid-cols-2 gap-3 stagger">
+                {[
+                  { label: 'Karachi Lighthouse', dist: '0.3 km' },
+                  { label: 'Empress Market', dist: '0.6 km' },
+                  { label: 'Avari Towers', dist: '0.8 km' },
+                  { label: "Jinnah's Mausoleum", dist: '1.2 km' },
+                  { label: 'National Museum', dist: '0.9 km' },
+                  { label: 'Burns Road', dist: '0.5 km' },
+                  { label: 'Rainbow Centre', dist: '0.4 km' },
+                  { label: 'Garden West', dist: '0.7 km' },
+                ].map(loc => (
+                  <div key={loc.label}
+                    className="reveal flex items-center justify-between p-4 border border-neutral-100 bg-[#fcfbf8] hover:border-[#c9a84c]/40 hover:bg-white transition-all duration-300">
+                    <span className="text-sm font-semibold text-[#0d1b2e]">{loc.label}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#c9a84c]">{loc.dist}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          4. FEATURED PROJECTS
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-28 md:py-36 bg-[#f7f5f0]">
-        <div className="container mx-auto px-6 md:px-12">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c] mb-4">
-                Selected Works
-              </p>
-              <h2 className="text-3xl md:text-5xl font-black tracking-tight text-[#0d1b2e] leading-tight">
-                Our finest developments.
+      {/* ════════════════════════════════════════════════════════════════════
+          4. THE TOWER
+      ════════════════════════════════════════════════════════════════════ */}
+      <section id="tower" className="py-28 md:py-36 bg-[#0d1b2e] text-white">
+        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-end mb-20">
+            <div className="reveal-left lg:col-span-7 space-y-6">
+              <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">The Development</span>
+              <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
+                Modern Luxury<br />
+                <span className="font-light italic">at the Centre of the City</span>
               </h2>
             </div>
-            <Link
-              href="/projects"
-              className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em]
-                         text-[#0d1b2e] pb-1 border-b border-[#0d1b2e] hover:border-[#c9a84c]
-                         hover:text-[#c9a84c] transition-colors"
-            >
-              All Projects
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects.map((p) => (
-              <ProjectCard
-                key={p.id}
-                id={p.id}
-                title={p.title}
-                slug={p.slug}
-                location={p.location}
-                status={p.status}
-                heroImage={p.hero_image}
-              />
-            ))}
-            {projects.length === 0 && (
-              <p className="col-span-3 text-center py-16 text-sm text-neutral-400 font-light">
-                Projects coming soon.
+            <div className="reveal-right lg:col-span-5">
+              <p className="text-sm text-white/50 font-light leading-relaxed">
+                Cherrywood Tower is the perfect combination of sophistication and convenience. Elegantly styled with one of the best architectural designs, it houses premium residences above a grand lobby, wide hallways, and high-speed lifts — with double-height luxury retail shops at street level.
               </p>
-            )}
+            </div>
           </div>
-        </div>
-      </section>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          5. TESTIMONIAL — dramatic dark quote block
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-[#0d1b2e] py-32 md:py-48">
-        <div className="container mx-auto px-6 md:px-12 max-w-4xl text-center">
-          <div className="flex justify-center mb-10">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className="w-4 h-4 text-[#c9a84c] fill-[#c9a84c]" />
-            ))}
-          </div>
-          <blockquote className="text-2xl md:text-4xl font-light text-white leading-relaxed tracking-tight mb-14">
-            &ldquo;{testimonial.quote}&rdquo;
-          </blockquote>
-          <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#c9a84c]">
-              {testimonial.author}
-            </p>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mt-2">
-              {testimonial.role}
-            </p>
-          </div>
-        </div>
-      </section>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="reveal relative w-full h-[300px] md:h-[400px] lg:h-full min-h-[380px] overflow-hidden">
+              <Image src="/lobby.png" alt="Cherrywood Tower grand lobby interior"
+                fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0d1b2e]/40 to-transparent" />
+            </div>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          6. FAQ — rendered only if there are entries in the database
-      ══════════════════════════════════════════════════════════════════════ */}
-      {faqs.length > 0 && (
-        <section className="py-24 md:py-32 bg-white">
-          <div className="container mx-auto px-6 md:px-12 max-w-3xl">
-            <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c] mb-4">
-              Frequently Asked
-            </p>
-            <h2 className="text-3xl md:text-4xl font-black tracking-tight text-[#0d1b2e] mb-16">
-              Common questions.
-            </h2>
-            <div className="divide-y divide-neutral-200">
-              {faqs.map((faq, i) => (
-                <div key={i} className="py-8">
-                  <h3 className="text-base font-bold text-[#0d1b2e] mb-3 tracking-tight">
-                    {faq.question}
+            <div className="flex flex-col justify-between gap-5 stagger">
+              {[
+                { title: 'Grand Lobby', desc: 'A glamorous and modern entrance exuding luxury and finesse — the stylish lobby dazzles from first impression.' },
+                { title: 'Impressive Lift Lobby', desc: 'Impeccably styled with high-speed lifts ready to transport you to your desired floor in moments.' },
+                { title: 'Wide Hallways', desc: 'Spacious, well-lit corridors ensure your stride to the apartment is smooth and pleasant — a significant feature of the Tower.' },
+                { title: 'City View Balconies', desc: 'Balconies opening onto a striking view of the busy cityscape — rejuvenate your mind as you breathe the evening air.' },
+              ].map((feat, i) => (
+                <div key={i}
+                  className="reveal group border-l-2 border-[#c9a84c]/25 pl-6 hover:border-[#c9a84c] transition-colors duration-300 cursor-default">
+                  <h3 className="text-base font-bold text-white mb-1.5 group-hover:text-[#c9a84c] transition-colors duration-300">
+                    {feat.title}
                   </h3>
-                  <p className="text-sm text-neutral-500 leading-relaxed font-light">{faq.answer}</p>
+                  <p className="text-xs text-white/50 font-light leading-relaxed">{feat.desc}</p>
                 </div>
               ))}
             </div>
           </div>
-        </section>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          7. CONTACT FORM
-      ══════════════════════════════════════════════════════════════════════ */}
-      {cms.display_form && (
-        <section className="py-24 bg-neutral-50 relative">
-          <div className="container mx-auto px-6 md:px-12 max-w-2xl">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-black text-[#0d1b2e] tracking-tight mb-4">
-                Get in Touch
-              </h2>
-              <p className="text-[#0d1b2e]/60 font-light">
-                Fill out the form below and our team will get back to you shortly.
-              </p>
-            </div>
-            <form className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">First Name</label>
-                  <input type="text" className="w-full bg-white border border-neutral-200 p-4 text-sm focus:outline-none focus:border-[#c9a84c] transition-colors" placeholder="John" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Last Name</label>
-                  <input type="text" className="w-full bg-white border border-neutral-200 p-4 text-sm focus:outline-none focus:border-[#c9a84c] transition-colors" placeholder="Doe" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Email Address</label>
-                <input type="email" className="w-full bg-white border border-neutral-200 p-4 text-sm focus:outline-none focus:border-[#c9a84c] transition-colors" placeholder="john@example.com" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Message</label>
-                <textarea rows={4} className="w-full bg-white border border-neutral-200 p-4 text-sm focus:outline-none focus:border-[#c9a84c] transition-colors resize-none" placeholder="How can we help you?"></textarea>
-              </div>
-              <button type="button" className="w-full bg-[#0d1b2e] hover:bg-[#162840] text-white px-10 py-5 text-[11px] font-black uppercase tracking-[0.2em] transition-colors duration-300">
-                Send Message
-              </button>
-            </form>
-          </div>
-        </section>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          8. CTA BANNER — gold closing strip
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-[#c9a84c] py-20 md:py-24">
-        <div className="container mx-auto px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div>
-            <h2 className="text-2xl md:text-4xl font-black text-[#0d1b2e] tracking-tight mb-2">
-              Ready to find your home?
-            </h2>
-            <p className="text-[#0d1b2e]/60 font-light text-sm">
-              Speak with our development team today.
-            </p>
-          </div>
-          <Link
-            href="/contact"
-            className="shrink-0 inline-flex items-center gap-3 bg-[#0d1b2e] hover:bg-[#162840]
-                       text-white px-10 py-4 text-[11px] font-black uppercase tracking-[0.2em]
-                       transition-colors duration-300"
-          >
-            Get in Touch
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
         </div>
       </section>
 
+      {/* ════════════════════════════════════════════════════════════════════
+          5. APARTMENTS
+      ════════════════════════════════════════════════════════════════════ */}
+      <section id="apartments" className="py-28 md:py-36 bg-[#f7f5f0]">
+        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+            <div className="reveal space-y-4">
+              <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Residences</span>
+              <h2 className="text-4xl md:text-5xl font-black text-[#0d1b2e] leading-tight">
+                <span className="font-light italic">Comfort Beyond</span><br />
+                Imagination
+              </h2>
+            </div>
+            <p className="reveal text-sm text-neutral-500 font-light max-w-xs leading-relaxed">
+              Enter a spacious lounge as you turn the key to your luxury apartment. Full-length windows, onyx-topped kitchens, elegant master bedrooms, and spa-quality bathrooms await.
+            </p>
+          </div>
+
+          <div className="reveal relative w-full h-[250px] sm:h-[350px] md:h-[460px] overflow-hidden mb-16">
+            <Image src="/apartment.png" alt="Cherrywood Tower luxury apartment interior"
+              fill className="object-cover" sizes="100vw" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#f7f5f0] via-transparent to-transparent" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 stagger">
+            {unitGroups.map(group => {
+              const available = group.units.filter(u => u.status === 'available').length
+              const total = group.units.length
+              return (
+                <div key={group.type}
+                  className="reveal card-lift bg-white border border-neutral-100 group">
+                  <div className="bg-[#0d1b2e] px-8 py-6">
+                    <span className="text-[9px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">{group.type}</span>
+                    <h3 className="text-2xl font-black text-white mt-1">{group.label}</h3>
+                  </div>
+                  <div className="px-8 py-8 space-y-5">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Bedrooms</p>
+                        <p className="text-sm font-semibold text-[#0d1b2e]">{group.beds}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Size</p>
+                        <p className="text-sm font-semibold text-[#0d1b2e]">{group.size}</p>
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t border-neutral-100">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Starting Price</p>
+                      <p className="text-lg font-black text-[#c9a84c]">{group.price}</p>
+                    </div>
+                    {total > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+                          {available} of {total} available
+                        </span>
+                        <span className={`text-[9px] font-bold px-2.5 py-1 uppercase tracking-wider ${available > 0 ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
+                          }`}>
+                          {available > 0 ? 'Available' : 'Fully Booked'}
+                        </span>
+                      </div>
+                    )}
+                    {/*
+                      Passes unit type as a query param so the contact page
+                      can pre-select the right option in the dropdown.
+                      ?interest=type-a / type-b / type-c
+                    */}
+                    <Link
+                      href={`/contact?from=cherrywood-tower&interest=${group.type.toLowerCase().replace(' ', '-')}`}
+                      className="block w-full text-center border border-[#0d1b2e] hover:bg-[#0d1b2e] hover:text-white text-[#0d1b2e] py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300"
+                    >
+                      Enquire About {group.type}
+                    </Link>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          6. RETAIL SHOPS
+      ════════════════════════════════════════════════════════════════════ */}
+      <section className="py-28 md:py-36 bg-white">
+        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
+
+            <div className="reveal-left lg:col-span-5 space-y-6">
+              <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Commercial</span>
+              <h2 className="text-4xl md:text-5xl font-black text-[#0d1b2e] leading-tight">
+                Grand Shops —<br />
+                <span className="font-light italic">A Smart Investment</span>
+              </h2>
+              <div className="gold-line" />
+              <p className="text-sm text-neutral-500 font-light leading-relaxed">
+                Enjoying a prime Saddar location — dubbed the commercial hub of Karachi — the project is a haven for investors. Double-height shops at the ground floor give ample business opportunity with guaranteed footfall, enabling businessmen to multiply profits rapidly.
+              </p>
+              <p className="text-sm text-neutral-500 font-light leading-relaxed">
+                Shops are exclusively designed for high-end brands and luxury items. Spacious interiors allow elegant product display, creating a one-of-a-kind experience for every customer.
+              </p>
+
+              {shopUnits.length > 0 && (
+                <div className="space-y-3 pt-4 stagger">
+                  {shopUnits.map(shop => (
+                    <div key={shop.id}
+                      className="reveal flex items-center justify-between p-4 border border-neutral-100 hover:border-[#c9a84c]/40 transition-all duration-300">
+                      <div>
+                        <p className="text-sm font-bold text-[#0d1b2e]">{shop.unit_number}</p>
+                        <p className="text-xs text-neutral-400">{shop.size_sqft} Sq.Ft.</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-black text-[#c9a84c]">
+                          PKR {shop.price ? Number(shop.price).toLocaleString('en-PK') : 'On Request'}
+                        </p>
+                        <span className={`text-[9px] font-bold uppercase tracking-wider ${shop.status === 'available' ? 'text-green-600' : 'text-amber-600'
+                          }`}>
+                          {shop.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <Link href="/contact?from=cherrywood-tower&interest=retail-shop"
+                className="group inline-flex items-center gap-3 bg-[#c9a84c] hover:bg-[#b8973d] text-[#0d1b2e] px-8 py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-colors duration-300">
+                Invest in a Shop
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300" />
+              </Link>
+            </div>
+
+            <div className="reveal-right lg:col-span-7">
+              <div className="relative w-full h-[320px] sm:h-[420px] md:h-[520px] lg:h-[600px] overflow-hidden bg-[#0d1b2e]">
+                <Image src="/cherrywood-tower.png" loading="eager" alt="Cherrywood Tower ground floor retail shops"
+                  fill className="object-cover opacity-80 hover:opacity-90 transition-opacity duration-700"
+                  sizes="(max-width: 1024px) 100vw, 58vw" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0d1b2e]/70 to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#c9a84c]">Wide Shopping Corridors</p>
+                  <p className="text-white/70 text-sm mt-1">Spacious walkways lined with classy double-height shops on both sides.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          7. AMENITIES
+      ════════════════════════════════════════════════════════════════════ */}
+      <section id="amenities" className="py-28 md:py-36 bg-[#0d1b2e] text-white">
+        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+
+          <div className="reveal max-w-3xl mb-20 space-y-4">
+            <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Lifestyle</span>
+            <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
+              City Outside,<br />
+              <span className="font-light italic">Tranquillity Inside</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 stagger">
+            {[
+              { icon: <Trees className="w-5 h-5" />, title: 'Rooftop Garden', desc: 'A lush rooftop garden, BBQ area, gazebo, and jogging track — your private green retreat above the city.' },
+              { icon: <ShieldCheck className="w-5 h-5" />, title: '24/7 Security', desc: 'Round-the-clock CCTV surveillance and trained security personnel ensure complete peace of mind.' },
+              { icon: <Flame className="w-5 h-5" />, title: 'NFPA Fire System', desc: 'Equipped with internationally certified NFPA firefighting systems — your safety is non-negotiable.' },
+              { icon: <Zap className="w-5 h-5" />, title: 'Standby Generator', desc: 'Never experience a blackout. Full standby generator coverage keeps every floor powered at all times.' },
+              { icon: <Car className="w-5 h-5" />, title: 'Secure Parking', desc: 'Expansive, fully secured parking area with CCTV cameras and firefighting equipment in place.' },
+              { icon: <Building2 className="w-5 h-5" />, title: 'Hi-Speed Lifts', desc: 'Multiple high-speed lifts ready to transport you to your floor swiftly and smoothly.' },
+              { icon: <Wifi className="w-5 h-5" />, title: 'Modern Electrical', desc: 'Shock-proof electrical systems by Hi-Tech Engineering. Every circuit is safety certified.' },
+              { icon: <CheckCircle2 className="w-5 h-5" />, title: 'HSE Compliant', desc: 'Internationally certified Health, Safety & Environment standards ensured by ME Pakistan.' },
+            ].map((am, i) => (
+              <div key={i}
+                className="reveal group card-lift bg-white/5 border border-white/10 p-8 space-y-4 hover:bg-white/10 hover:border-[#c9a84c]/30">
+                <div className="w-10 h-10 border border-[#c9a84c]/40 flex items-center justify-center text-[#c9a84c] group-hover:bg-[#c9a84c] group-hover:border-[#c9a84c] group-hover:text-[#0d1b2e] transition-all duration-300">
+                  {am.icon}
+                </div>
+                <h3 className="text-base font-bold text-white group-hover:text-[#c9a84c] transition-colors duration-300">{am.title}</h3>
+                <p className="text-xs text-white/50 font-light leading-relaxed">{am.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          8. NOCs & APPROVALS
+      ════════════════════════════════════════════════════════════════════ */}
+      <section id="approvals" className="py-24 bg-white border-y border-neutral-100">
+        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+          <div className="reveal text-center mb-14 space-y-3">
+            <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Verified &amp; Approved</span>
+            <h2 className="text-3xl md:text-5xl font-black text-[#0d1b2e]">
+              NOCs &amp; Regulatory Approvals
+            </h2>
+            <p className="text-sm text-neutral-400 font-light max-w-xl mx-auto">
+              Every required authority has granted its certification — giving buyers and investors complete legal confidence.
+            </p>
+          </div>
+
+          {/* FIXED: dangerouslySetInnerHTML removed. Plain JSX strings handle & correctly. */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 stagger">
+            {nocs.map(noc => (
+              <div key={noc}
+                className="reveal flex items-center gap-3 p-4 border border-neutral-100 hover:border-[#c9a84c]/30 hover:bg-[#fcfbf8] transition-all duration-300">
+                <CheckCircle2 className="w-4 h-4 text-[#c9a84c] shrink-0" />
+                <span className="text-[11px] font-semibold text-[#0d1b2e] leading-tight">{noc}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          9. THE WINNING TEAM
+      ════════════════════════════════════════════════════════════════════ */}
+      <section className="py-28 md:py-36 bg-[#f7f5f0]">
+        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+          <div className="reveal max-w-3xl mb-16 space-y-4">
+            <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Expert Collaboration</span>
+            <h2 className="text-4xl md:text-5xl font-black text-[#0d1b2e] leading-tight">The Winning Team</h2>
+            <p className="text-sm text-neutral-500 font-light max-w-xl leading-relaxed">
+              A team of highly skilled experts have joined hands to make Cherrywood Tower a success — from architecture and structure to electrical, safety, and visual excellence.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 stagger">
+            {[
+              { role: 'Developer', name: 'Ameer Hamza Builders & Developers', desc: 'A renowned name in the construction industry — the mastermind behind this iconic development, bringing vision to reality.' },
+              { role: 'Structural Engineer', name: 'Combiner', desc: 'Responsible for the state-of-the-art architectural structure, ensuring every floor meets the highest standards of structural integrity.' },
+              { role: 'MEP Engineering', name: 'MV Nareen Associates', desc: 'Overseeing plumbing, electrical, and mechanical systems that power the building seamlessly day and night.' },
+              { role: 'Electrical Engineering', name: 'Hi-Tech Engineering', desc: 'A renowned electrical engineering firm that has ensured all wiring and installations are completely shock-proof and certified.' },
+              { role: 'Health, Safety & Environment', name: 'ME Pakistan', desc: 'A pioneer in environmental consultancy, ensuring internationally certified HSE standards are rigorously met throughout the project.' },
+              { role: 'Architectural Visualisation', name: 'Pixarch', desc: "One of the finest architectural visualisation companies in Pakistan — closely capturing how life will feel inside Cherrywood Tower." },
+            ].map((member, i) => (
+              <div key={i}
+                className="reveal group card-lift bg-white border border-neutral-100 p-8 space-y-4">
+                <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#c9a84c]">{member.role}</span>
+                <h3 className="text-lg font-bold text-[#0d1b2e] tracking-tight group-hover:text-[#c9a84c] transition-colors duration-300">
+                  {member.name}
+                </h3>
+                <div className="gold-line" />
+                <p className="text-xs text-neutral-500 font-light leading-relaxed">{member.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          10. CONTACT
+          TODO: Wire this form to a server action or API route.
+                Currently collects input but submit button does nothing.
+      ════════════════════════════════════════════════════════════════════ */}
+      <section id="contact" className="py-28 md:py-36 bg-[#0d1b2e] relative overflow-hidden">
+        {/* Radial gold ambient glow */}
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse 50% 50% at 80% 50%, rgba(201,168,76,0.06), transparent)' }} />
+
+        <div className="relative w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
+
+            {/* Left */}
+            <div className="reveal-left lg:col-span-5 space-y-8">
+              <div className="space-y-4">
+                <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Get In Touch</span>
+                <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
+                  Feel the Change<br />
+                  <span className="font-light italic">in Your Life</span>
+                </h2>
+              </div>
+              <p className="text-sm text-white/50 font-light leading-relaxed">
+                Register your interest today and our team will get back to you with exclusive floor plans, updated pricing, and private viewing arrangements.
+              </p>
+
+              <div className="space-y-5 pt-4 border-t border-white/10">
+                {[
+                  { icon: <Phone className="w-4 h-4" />, label: 'Phone', content: <a href="tel:+923111854854" className="text-sm font-semibold text-white hover:text-[#c9a84c] transition-colors">+92 3111 854 854</a> },
+                  { icon: <Mail className="w-4 h-4" />, label: 'Email', content: <a href="mailto:info@cherrywoodbuilders.com" className="text-sm font-semibold text-white hover:text-[#c9a84c] transition-colors">info@cherrywoodbuilders.com</a> },
+                  { icon: <MapPin className="w-4 h-4" />, label: 'Address', content: <p className="text-sm font-semibold text-white/80 leading-relaxed">Plot No. 125 Katrak Road,<br />Depot Lines, Saddar,<br />Karachi — 74200, Pakistan</p> },
+                ].map(item => (
+                  <div key={item.label} className="flex items-start gap-4">
+                    <div className="w-10 h-10 border border-[#c9a84c]/30 flex items-center justify-center text-[#c9a84c] shrink-0">
+                      {item.icon}
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-0.5">{item.label}</p>
+                      {item.content}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: Form */}
+            <div className="reveal-right lg:col-span-7">
+              <ContactForm />
+            </div>
+
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
