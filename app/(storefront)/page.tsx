@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { ContactForm } from '@/components/storefront/ContactForm'
+import { TowerFeatures } from '@/components/storefront/TowerFeatures'
 
 // ── Meta ──────────────────────────────────────────────────────────────────────
 export async function generateMetadata(): Promise<Metadata> {
@@ -107,7 +108,12 @@ export default async function CherrywoodTowerPage() {
   ]
 
   return (
-    <div className="bg-[#fcfbf8] text-[#0d1b2e] overflow-x-hidden">
+    <div className="bg-[#fcfbf8] text-[#0d1b2e] overflow-x-hidden relative">
+      {/* GLOBAL CONNECTED GEOMETRIC GRID */}
+      {/* <div className="absolute inset-0 pointer-events-none z-10 opacity-40" style={{
+        backgroundImage: 'linear-gradient(to right, rgba(201,168,76,0.3) 1px, transparent 1px), linear-gradient(to bottom, rgba(201,168,76,0.3) 1px, transparent 1px)',
+        backgroundSize: '120px 120px'
+      }} /> */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* ════════════════════════════════════════════════════════════════════
@@ -291,26 +297,28 @@ export default async function CherrywoodTowerPage() {
         {/* Full-bleed bg image */}
         <div className="anim-fade absolute inset-0 lg:left-[45%]">
           <Image
-            src="/cherrywood-tower.png"
+            src="/uploads/homepage/cherrywood-top.webp"
             loading="eager"
             alt="Cherrywood Tower exterior rendering at dusk"
             fill priority
             className="object-cover object-center opacity-40 lg:opacity-80"
             sizes="(max-width: 1024px) 100vw, 55vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0d1b2e]/80 via-[#0d1b2e]/40 to-[#0d1b2e] lg:bg-gradient-to-r lg:from-[#0d1b2e] lg:via-[#0d1b2e]/50 lg:to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-b from-[#0d1b2e]/80 via-[#0d1b2e]/40 to-[#0d1b2e] lg:bg-linear-to-r lg:from-[#0d1b2e] lg:via-[#0d1b2e]/50 lg:to-transparent" />
         </div>
 
         {/* Subtle noise texture */}
-        <div aria-hidden="true" className="absolute inset-0 pointer-events-none opacity-[0.025]"
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none opacity-[0.025] z-0"
           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`, backgroundSize: '128px' }}
         />
 
+
+
         {/* Gold vertical accent */}
-        <div aria-hidden="true" className="absolute top-0 right-0 w-px h-48 bg-gradient-to-b from-[#c9a84c]/50 to-transparent hidden lg:block" />
+        <div aria-hidden="true" className="absolute top-0 right-0 w-px h-48 bg-linear-to-b from-[#c9a84c]/50 to-transparent hidden lg:block z-20" />
 
         {/* Text column */}
-        <div className="relative z-10 w-full lg:w-[50%] flex flex-col justify-center pt-40 pb-24 lg:py-0 px-6 md:px-12 lg:px-20 xl:px-28">
+        <div className="relative z-20 w-full lg:w-[50%] flex flex-col justify-center pt-40 pb-24 lg:py-0 px-6 md:px-12 lg:px-20 xl:px-28">
 
           <div className="anim-eyebrow flex items-center gap-3 mb-8">
             <span className="block w-8 h-px bg-[#c9a84c]" />
@@ -329,7 +337,7 @@ export default async function CherrywoodTowerPage() {
             Now using font-black on main word, font-light italic on the accent word —
             the weight contrast IS the design, not a weakness.
           */}
-          <h1 className="anim-h1 headline-shimmer text-5xl md:text-6xl xl:text-7xl text-white leading-[1.05] tracking-tight mb-6">
+          <h1 className="headline-shimmer text-5xl md:text-6xl xl:text-7xl text-white leading-[1.05] tracking-tight mb-6">
             <span className="font-black">Cherrywood</span><br />
             <span className="font-light italic text-[#c9a84c]">Tower</span>
           </h1>
@@ -383,16 +391,16 @@ export default async function CherrywoodTowerPage() {
         </div>
 
         {/* Scroll indicator */}
-        <div className="anim-stats absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-10 hidden lg:flex">
+        <div className="anim-stats absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-20 lg:flex">
           <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/20">Scroll</span>
-          <div className="scroll-pulse w-px h-10 bg-gradient-to-b from-white/30 to-transparent" />
+          <div className="scroll-pulse w-px h-10 bg-linear-to-b from-white/30 to-transparent" />
         </div>
       </section>
 
       {/* ════════════════════════════════════════════════════════════════════
           2. MARQUEE
       ════════════════════════════════════════════════════════════════════ */}
-      <div className="bg-[#c9a84c] py-3.5 overflow-hidden">
+      <div className="relative z-20 bg-[#c9a84c] py-3.5 overflow-hidden">
         <div className="marquee-inner flex whitespace-nowrap">
           {Array.from({ length: 8 }).map((_, i) => (
             <span key={i} className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0d1b2e] pr-14">
@@ -406,7 +414,7 @@ export default async function CherrywoodTowerPage() {
           3. LOCATION
       ════════════════════════════════════════════════════════════════════ */}
       <section className="py-28 md:py-36 bg-white">
-        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+        <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
 
             <div className="reveal-left lg:col-span-5 space-y-6">
@@ -456,8 +464,9 @@ export default async function CherrywoodTowerPage() {
       {/* ════════════════════════════════════════════════════════════════════
           4. THE TOWER
       ════════════════════════════════════════════════════════════════════ */}
-      <section id="tower" className="py-28 md:py-36 bg-[#0d1b2e] text-white">
-        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+      <section id="tower" className="relative py-28 md:py-36 bg-[#0d1b2e] text-white overflow-hidden">
+
+        <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-end mb-20">
             <div className="reveal-left lg:col-span-7 space-y-6">
@@ -474,38 +483,16 @@ export default async function CherrywoodTowerPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="reveal relative w-full h-[300px] md:h-[400px] lg:h-full min-h-[380px] overflow-hidden">
-              <Image src="/lobby.png" alt="Cherrywood Tower grand lobby interior"
-                fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0d1b2e]/40 to-transparent" />
-            </div>
-
-            <div className="flex flex-col justify-between gap-5 stagger">
-              {[
-                { title: 'Grand Lobby', desc: 'A glamorous and modern entrance exuding luxury and finesse — the stylish lobby dazzles from first impression.' },
-                { title: 'Impressive Lift Lobby', desc: 'Impeccably styled with high-speed lifts ready to transport you to your desired floor in moments.' },
-                { title: 'Wide Hallways', desc: 'Spacious, well-lit corridors ensure your stride to the apartment is smooth and pleasant — a significant feature of the Tower.' },
-                { title: 'City View Balconies', desc: 'Balconies opening onto a striking view of the busy cityscape — rejuvenate your mind as you breathe the evening air.' },
-              ].map((feat, i) => (
-                <div key={i}
-                  className="reveal group border-l-2 border-[#c9a84c]/25 pl-6 hover:border-[#c9a84c] transition-colors duration-300 cursor-default">
-                  <h3 className="text-base font-bold text-white mb-1.5 group-hover:text-[#c9a84c] transition-colors duration-300">
-                    {feat.title}
-                  </h3>
-                  <p className="text-xs text-white/50 font-light leading-relaxed">{feat.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <TowerFeatures />
         </div>
       </section>
 
       {/* ════════════════════════════════════════════════════════════════════
           5. APARTMENTS
       ════════════════════════════════════════════════════════════════════ */}
-      <section id="apartments" className="py-28 md:py-36 bg-[#f7f5f0]">
-        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+      <section id="apartments" className="relative py-28 md:py-36 bg-[#f7f5f0] overflow-hidden">
+
+        <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
             <div className="reveal space-y-4">
@@ -521,9 +508,9 @@ export default async function CherrywoodTowerPage() {
           </div>
 
           <div className="reveal relative w-full h-[250px] sm:h-[350px] md:h-[460px] overflow-hidden mb-16">
-            <Image src="/apartment.png" alt="Cherrywood Tower luxury apartment interior"
+            <Image src="/uploads/homepage/spacious-lounge.webp" alt="Cherrywood Tower luxury apartment interior"
               fill className="object-cover" sizes="100vw" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#f7f5f0] via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-[#f7f5f0] via-transparent to-transparent" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 stagger">
@@ -586,7 +573,7 @@ export default async function CherrywoodTowerPage() {
           6. RETAIL SHOPS
       ════════════════════════════════════════════════════════════════════ */}
       <section className="py-28 md:py-36 bg-white">
-        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+        <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
 
             <div className="reveal-left lg:col-span-5 space-y-6">
@@ -635,10 +622,10 @@ export default async function CherrywoodTowerPage() {
 
             <div className="reveal-right lg:col-span-7">
               <div className="relative w-full h-[320px] sm:h-[420px] md:h-[520px] lg:h-[600px] overflow-hidden bg-[#0d1b2e]">
-                <Image src="/cherrywood-tower.png" loading="eager" alt="Cherrywood Tower ground floor retail shops"
+                <Image src="/uploads/homepage/cherrywood-shops.webp" loading="eager" alt="Cherrywood Tower ground floor retail shops"
                   fill className="object-cover opacity-80 hover:opacity-90 transition-opacity duration-700"
                   sizes="(max-width: 1024px) 100vw, 58vw" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0d1b2e]/70 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-[#0d1b2e]/70 to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6">
                   <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#c9a84c]">Wide Shopping Corridors</p>
                   <p className="text-white/70 text-sm mt-1">Spacious walkways lined with classy double-height shops on both sides.</p>
@@ -654,7 +641,7 @@ export default async function CherrywoodTowerPage() {
           7. AMENITIES
       ════════════════════════════════════════════════════════════════════ */}
       <section id="amenities" className="py-28 md:py-36 bg-[#0d1b2e] text-white">
-        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+        <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
 
           <div className="reveal max-w-3xl mb-20 space-y-4">
             <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Lifestyle</span>
@@ -692,7 +679,7 @@ export default async function CherrywoodTowerPage() {
           8. NOCs & APPROVALS
       ════════════════════════════════════════════════════════════════════ */}
       <section id="approvals" className="py-24 bg-white border-y border-neutral-100">
-        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+        <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
           <div className="reveal text-center mb-14 space-y-3">
             <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Verified &amp; Approved</span>
             <h2 className="text-3xl md:text-5xl font-black text-[#0d1b2e]">
@@ -707,7 +694,7 @@ export default async function CherrywoodTowerPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 stagger">
             {nocs.map(noc => (
               <div key={noc}
-                className="reveal flex items-center gap-3 p-4 border border-neutral-100 hover:border-[#c9a84c]/30 hover:bg-[#fcfbf8] transition-all duration-300">
+                className="reveal bg-white/5 backdrop-blur-lg flex items-center gap-3 p-4 border border-neutral-100 hover:border-[#c9a84c]/30 hover:bg-[#fcfbf8] transition-all duration-300">
                 <CheckCircle2 className="w-4 h-4 text-[#c9a84c] shrink-0" />
                 <span className="text-[11px] font-semibold text-[#0d1b2e] leading-tight">{noc}</span>
               </div>
@@ -720,7 +707,7 @@ export default async function CherrywoodTowerPage() {
           9. THE WINNING TEAM
       ════════════════════════════════════════════════════════════════════ */}
       <section className="py-28 md:py-36 bg-[#f7f5f0]">
-        <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+        <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
           <div className="reveal max-w-3xl mb-16 space-y-4">
             <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Expert Collaboration</span>
             <h2 className="text-4xl md:text-5xl font-black text-[#0d1b2e] leading-tight">The Winning Team</h2>
@@ -762,7 +749,7 @@ export default async function CherrywoodTowerPage() {
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
           style={{ background: 'radial-gradient(ellipse 50% 50% at 80% 50%, rgba(201,168,76,0.06), transparent)' }} />
 
-        <div className="relative w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+        <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
 
             {/* Left */}

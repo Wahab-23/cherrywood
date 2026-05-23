@@ -10,14 +10,14 @@ export function ContactForm() {
     e.preventDefault()
     const form = e.currentTarget // Capture form reference before async call
     setStatus('submitting')
-    
+
     const formData = new FormData(form)
     const result = await submitContactForm(formData)
-    
+
     if (result.success) {
       setStatus('success')
       form.reset() // Use captured reference
-      
+
       // Auto dismiss success message after 5 seconds
       setTimeout(() => setStatus('idle'), 5000)
     } else {
@@ -26,14 +26,14 @@ export function ContactForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 p-8 md:p-12 space-y-6">
-      
+    <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 p-8 md:p-12 space-y-6 ">
+
       {status === 'success' && (
         <div className="bg-green-500/10 border border-green-500/20 text-green-400 px-4 py-3 text-sm">
           Thank you! Your enquiry has been sent. Our concierge will contact you shortly.
         </div>
       )}
-      
+
       {status === 'error' && (
         <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 text-sm">
           Something went wrong submitting the form. Please try again or contact us directly.
