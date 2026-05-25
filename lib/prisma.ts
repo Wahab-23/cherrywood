@@ -9,6 +9,7 @@ const adapter = new PrismaMariaDb({
     database: process.env.DATABASE_NAME,
     connectionLimit: 5,
     allowPublicKeyRetrieval: true,
+    collation: "utf8mb4_unicode_ci",
 });
 const prisma = new PrismaClient({ adapter });
 

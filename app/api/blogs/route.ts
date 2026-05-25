@@ -16,12 +16,12 @@ export async function GET(request: NextRequest) {
             orderBy: { created_at: "desc" },
             where: {
                 AND: [
-                    {
+                    search ? {
                         OR: [
                             { title: { contains: search } },
                             { content: { contains: search } },
                         ],
-                    },
+                    } : {},
                     category
                         ? {
                             category: {

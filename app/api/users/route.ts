@@ -13,25 +13,22 @@ export async function GET(request: NextRequest) {
         const search = request.nextUrl.searchParams.get("search") || "";
         const skip = (page - 1) * limit;
 
+        const whereClause = search ? {
+            OR: [
+                { name: { contains: search } },
+                { email: { contains: search } }
+            ]
+        } : {};
+
         const users = await prisma.user.findMany({
-            where: {
-                OR: [
-                    { name: { contains: search } },
-                    { email: { contains: search } }
-                ]
-            },
+            where: whereClause,
             skip,
             take: limit,
             include: { role: true }
         });
 
         const total = await prisma.user.count({
-            where: {
-                OR: [
-                    { name: { contains: search } },
-                    { email: { contains: search } }
-                ]
-            }
+            where: whereClause
         });
 
         return NextResponse.json({ success: true, data: users, meta: { page, limit, total, pages: Math.ceil(total / limit) } });
