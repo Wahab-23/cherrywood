@@ -41,7 +41,7 @@ type UnitGroup = {
   label: string
   beds: string
   size: string
-  price: string
+  layoutImage: string
   units: Awaited<ReturnType<typeof prisma.unit.findMany>>
 }
 
@@ -60,17 +60,20 @@ export default async function CherrywoodTowerPage() {
   const unitGroups: UnitGroup[] = [
     {
       type: 'Type A', label: '3 Bedroom',
-      beds: '3 Bedrooms', size: '1,056 – 1,152 Sq.Ft.', price: 'PKR 1.42 – 1.55 Cr',
+      beds: '3 Bedrooms', size: '1,056 – 1,152 Sq.Ft.',
+      layoutImage: '/uploads/homepage/type-a-3-bedroom-1780295250720.png',
       units: residentialUnits.filter(u => u.unit_number.includes('Type A')),
     },
     {
       type: 'Type B', label: '2 Bedroom (Drawing)',
-      beds: '2 Bedrooms + Drawing', size: '950 Sq.Ft.', price: 'PKR 1.15 Cr',
+      beds: '2 Bedrooms + Drawing', size: '950 Sq.Ft.',
+      layoutImage: '/uploads/homepage/type-b-2-bedroom--drawing--1780295255906.png',
       units: residentialUnits.filter(u => u.unit_number.includes('Type B')),
     },
     {
       type: 'Type C', label: '2 Bedroom',
-      beds: '2 Bedrooms + Lounge', size: '916 – 1,016 Sq.Ft.', price: 'PKR 85 – 92 Lac',
+      beds: '2 Bedrooms + Lounge', size: '916 – 1,016 Sq.Ft.',
+      layoutImage: '/uploads/homepage/type-c-2-bedroom-1780295260924.png',
       units: residentialUnits.filter(u => u.unit_number.includes('Type C')),
     },
   ]
@@ -519,47 +522,52 @@ export default async function CherrywoodTowerPage() {
               const total = group.units.length
               return (
                 <div key={group.type}
-                  className="reveal card-lift bg-white border border-neutral-100 group">
-                  <div className="bg-[#0d1b2e] px-8 py-6">
-                    <span className="text-[9px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">{group.type}</span>
-                    <h3 className="text-2xl font-black text-white mt-1">{group.label}</h3>
+                  className="reveal card-lift bg-white border border-neutral-100 group flex flex-col justify-between">
+                  <div>
+                    <div className="bg-[#0d1b2e] px-8 py-6">
+                      <span className="text-[9px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">{group.type}</span>
+                      <h3 className="text-2xl font-black text-white mt-1">{group.label}</h3>
+                    </div>
+                    {/* Apartment Layout Plan Image */}
+                    <div className="relative w-full h-56 bg-neutral-50/50 border-b border-neutral-100 overflow-hidden group/img flex items-center justify-center">
+                      <Image
+                        src={group.layoutImage}
+                        alt={`${group.label} Layout Plan`}
+                        fill
+                        className="object-contain p-6 transition-transform duration-700 group-hover/img:scale-105"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                      />
+                    </div>
+                    <div className="px-8 py-8 space-y-5">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Bedrooms</p>
+                          <p className="text-sm font-semibold text-[#0d1b2e]">{group.beds}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Size</p>
+                          <p className="text-sm font-semibold text-[#0d1b2e]">{group.size}</p>
+                        </div>
+                      </div>
+                      <div className="flex pt-4 border-t border-neutral-100">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-green-50 text-green-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0" />
+                          Available for Booking
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="px-8 py-8 space-y-5">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Bedrooms</p>
-                        <p className="text-sm font-semibold text-[#0d1b2e]">{group.beds}</p>
-                      </div>
-                      <div>
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Size</p>
-                        <p className="text-sm font-semibold text-[#0d1b2e]">{group.size}</p>
-                      </div>
-                    </div>
-                    <div className="pt-4 border-t border-neutral-100">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Starting Price</p>
-                      <p className="text-lg font-black text-[#c9a84c]">{group.price}</p>
-                    </div>
-                    {total > 0 && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
-                          {available} of {total} available
-                        </span>
-                        <span className={`text-[9px] font-bold px-2.5 py-1 uppercase tracking-wider ${available > 0 ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
-                          }`}>
-                          {available > 0 ? 'Available' : 'Fully Booked'}
-                        </span>
-                      </div>
-                    )}
+                  <div className="px-8 pb-8">
                     {/*
                       Passes unit type as a query param so the contact page
                       can pre-select the right option in the dropdown.
                       ?interest=type-a / type-b / type-c
                     */}
                     <Link
-                      href={`/contact?from=cherrywood-tower&interest=${group.type.toLowerCase().replace(' ', '-')}`}
+                      href={`/projects/cherrywood-tower/${group.type.toLowerCase().replace(' ', '-')}`}
                       className="block w-full text-center border border-[#0d1b2e] hover:bg-[#0d1b2e] hover:text-white text-[#0d1b2e] py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300"
                     >
-                      Enquire About {group.type}
+                      Explore Layout
                     </Link>
                   </div>
                 </div>
@@ -600,12 +608,9 @@ export default async function CherrywoodTowerPage() {
                         <p className="text-xs text-neutral-400">{shop.size_sqft} Sq.Ft.</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-black text-[#c9a84c]">
-                          PKR {shop.price ? Number(shop.price).toLocaleString('en-PK') : 'On Request'}
-                        </p>
                         <span className={`text-[9px] font-bold uppercase tracking-wider ${shop.status === 'available' ? 'text-green-600' : 'text-amber-600'
                           }`}>
-                          {shop.status}
+                          {shop.status === 'available' ? 'Available' : 'Not Available'}
                         </span>
                       </div>
                     </div>

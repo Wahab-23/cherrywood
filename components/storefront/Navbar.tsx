@@ -75,7 +75,11 @@ export function Navbar() {
           : 'bg-transparent border-transparent'
       )}
     >
-      <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+      <div className={cn('w-full mx-auto px-6 md:px-12 lg:px-20 xl:px-28 transition-all duration-300 ease-in-out',
+        isLightNav
+          ? 'max-w-[1536px]'
+          : ''
+      )}>
         <div className="flex items-center justify-between py-2">
 
           {/* Logo */}
@@ -85,7 +89,7 @@ export function Navbar() {
               alt="Cherrywood Logo"
               className={cn(
                 'w-auto object-contain transition-all duration-300 group-hover:opacity-80',
-                isLightNav ? 'h-14 md:h-16' : 'h-16 md:h-20'
+                isLightNav ? 'h-14 md:h-18' : 'h-16 md:h-20'
               )}
             />
           </Link>
@@ -93,7 +97,7 @@ export function Navbar() {
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-10">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href
+              const isActive = pathname.startsWith(`${link.href}/`) || pathname === link.href;
               return (
                 <Link
                   key={link.name}

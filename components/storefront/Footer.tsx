@@ -41,7 +41,7 @@ export function Footer() {
       </div>
 
       {/* ── Top accent line ── */}
-      <div className="w-full h-px bg-gradient-to-r from-transparent via-[#c9a84c]/60 to-transparent" />
+      <div className="w-full h-px bg-linear-to-r from-transparent via-[#c9a84c]/60 to-transparent" />
 
       {/* ── Main content ── */}
       <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28 pt-20 pb-16">

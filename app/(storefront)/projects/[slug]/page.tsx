@@ -3,7 +3,17 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
-import { MapPin, Calendar, Building2, Ruler, CheckCircle2, AlertCircle, Clock, ChevronLeft, ArrowRight } from 'lucide-react'
+import {
+  MapPin,
+  Calendar,
+  Building2,
+  Ruler,
+  AlertCircle,
+  Clock,
+  ChevronLeft,
+  ArrowRight
+} from 'lucide-react'
+import { ImageGalleryLightbox } from '@/components/storefront/lightbox'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -63,6 +73,14 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const availableUnits = project.units.filter(u => u.status === 'available').length
   const completionPercentage = project.project_updates.length > 0 ? project.project_updates[0].progress_percentage : 0
 
+  const isCherrywoodTower = project.title?.toLowerCase().includes('cherrywood tower') || project.slug === 'cherrywood-tower'
+  const isCommercial = !isCherrywoodTower && project.type?.toLowerCase().includes('commercial')
+  const isResidential = !isCherrywoodTower && project.type?.toLowerCase().includes('residential')
+
+  const unitSystemLabel = isCommercial ? 'Shops' : isResidential ? 'Apartments' : 'Properties'
+  const singularLabel = isCommercial ? 'Shop' : isResidential ? 'Apartment' : 'Property'
+  const sectionTitle = `Available ${unitSystemLabel}`
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ApartmentComplex',
@@ -102,7 +120,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0d1b2e] via-[#0d1b2e]/40 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-[#0d1b2e] via-[#0d1b2e]/40 to-transparent" />
 
         <div className="absolute bottom-0 left-0 right-0">
           <div className="w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28 pb-16 space-y-6">
@@ -182,8 +200,26 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                     {update.images.length > 0 && (
                       <div className="grid grid-cols-3 gap-2 pt-2">
                         {update.images.slice(0, 3).map(img => (
-                          <div key={img.id} className="relative h-20 bg-neutral-100">
-                            <img src={img.image_url} alt="Update snapshot" className="w-full h-full object-cover" />
+                          <div key={img.id} className="relative bg-neutral-100">
+                            <ImageGalleryLightbox
+                              images={[img.image_url]}
+                              initialIndex={0}
+                            >
+                              <div
+                                className="relative w-full bg-white border border-neutral-100 overflow-hidden cursor-zoom-in group"
+                                aria-label="View floor plan"
+                                role="button"
+                                tabIndex={0}
+                              >
+                                <Image
+                                  src={img.image_url}
+                                  alt="Update snapshot"
+                                  width={500}
+                                  height={500}
+                                  className="w-full h-32 md:h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                                />
+                              </div>
+                            </ImageGalleryLightbox>
                           </div>
                         ))}
                       </div>
@@ -194,70 +230,88 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             </section>
           )}
 
-          {/* Units Inventory */}
+          {/* Units Section */}
           <section className="space-y-8 pt-10 border-t border-neutral-100">
             <div className="flex items-end justify-between">
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
                   <span className="block w-8 h-px bg-[#c9a84c]" />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Inventory</span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">{isCommercial ? 'Commercial' : isResidential ? 'Residences' : 'Properties'}</span>
                 </div>
-                <h2 className="font-display text-3xl font-light text-[#0d1b2e]">Available Units</h2>
+                <h2 className="font-display text-3xl font-light text-[#0d1b2e]">{sectionTitle}</h2>
               </div>
-              <span className="text-[10px] font-bold text-neutral-400 bg-neutral-50 px-3 py-1.5 uppercase tracking-widest">
-                {availableUnits} / {project.units.length} Available
-              </span>
             </div>
 
             {project.units.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {project.units.map((unit) => (
-                  <div key={unit.id} className="p-6 border border-neutral-100 bg-white flex flex-col justify-between hover:border-[#c9a84c]/30 transition-colors">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h4 className="font-bold text-lg text-[#0d1b2e]">Unit {unit.unit_number}</h4>
-                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Floor: {unit.floor || 'N/A'}</p>
-                      </div>
-                      <span className={`text-[9px] font-bold px-2.5 py-1 uppercase tracking-wider ${unit.status === 'available' ? 'bg-green-50 text-green-700' :
-                          unit.status === 'booked' ? 'bg-amber-50 text-amber-700' :
-                            'bg-neutral-100 text-neutral-500'
-                        }`}>
-                        {unit.status}
-                      </span>
-                    </div>
+                {(() => {
+                  const uniqueTypesMap = new Map();
 
-                    <div className="flex items-center gap-4 text-sm text-neutral-500 mb-6">
-                      {unit.size_sqft && (
-                        <div className="flex items-center gap-1.5">
-                          <Ruler className="w-4 h-4 text-neutral-400" />
-                          {unit.size_sqft} sq.ft.
-                        </div>
-                      )}
-                      {unit.type && (
-                        <div className="flex items-center gap-1.5 capitalize">
-                          <Building2 className="w-4 h-4 text-neutral-400" />
-                          {unit.type}
-                        </div>
-                      )}
-                    </div>
+                  project.units.forEach((unit) => {
+                    const typeSlug = unit.unit_number.toLowerCase().includes('type a')
+                      ? 'type-a'
+                      : unit.unit_number.toLowerCase().includes('type b')
+                        ? 'type-b'
+                        : unit.unit_number.toLowerCase().includes('type c')
+                          ? 'type-c'
+                          : unit.unit_number.toLowerCase().replace(/\s+/g, '-');
 
-                    <div className="flex items-center justify-between pt-4 border-t border-neutral-100">
-                      <div className="text-lg font-black text-[#c9a84c]">
-                        {unit.price ? `PKR ${Number(unit.price).toLocaleString()}` : 'Price on Request'}
+                    if (!uniqueTypesMap.has(typeSlug)) {
+                      uniqueTypesMap.set(typeSlug, { ...unit, _typeSlug: typeSlug });
+                    } else if (unit.status === 'available') {
+                      uniqueTypesMap.get(typeSlug).status = 'available';
+                    }
+                  });
+
+                  return Array.from(uniqueTypesMap.values()).map((unit) => {
+                    const typeSlug = unit._typeSlug;
+
+                    return (
+                      <div key={typeSlug} className="p-6 border border-neutral-100 bg-white flex flex-col justify-between hover:border-[#c9a84c]/30 transition-colors">
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <h4 className="font-bold text-lg text-[#0d1b2e] capitalize">
+                              {
+                                unit.unit_number.toLowerCase().includes('type')
+                                  ? unit.unit_number
+                                  : (unit.type || singularLabel)
+                              }
+                            </h4>
+                          </div>
+                          <span className={`text-[9px] font-bold px-2.5 py-1 uppercase tracking-wider ${unit.status === 'available' ? 'bg-green-50 text-green-700' : 'bg-neutral-100 text-neutral-500'}`}>
+                            {unit.status === 'available' ? 'Available' : 'Not Available'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-4 text-sm text-neutral-500 mb-6">
+                          {unit.size_sqft && (
+                            <div className="flex items-center gap-1.5">
+                              <Ruler className="w-4 h-4 text-neutral-400" />
+                              {unit.size_sqft} sq.ft.
+                            </div>
+                          )}
+                          {unit.type && (
+                            <div className="flex items-center gap-1.5 capitalize">
+                              <Building2 className="w-4 h-4 text-neutral-400" />
+                              {unit.type}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-end pt-4 border-t border-neutral-100">
+                          <Link href={`/projects/${project.slug}/${typeSlug}`} className="text-[10px] font-black uppercase tracking-widest text-[#0d1b2e] hover:text-[#c9a84c] transition-colors flex items-center gap-1">
+                            View Details <ArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </div>
                       </div>
-                      {unit.status === 'available' && (
-                        <Link href={`/contact?unit=${unit.unit_number}&project=${project.slug}`} className="text-[10px] font-black uppercase tracking-widest text-[#0d1b2e] hover:text-[#c9a84c] transition-colors flex items-center gap-1">
-                          Inquire <ArrowRight className="w-3 h-3" />
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                    )
+                  });
+                })()}
               </div>
             ) : (
               <div className="p-10 border border-neutral-200 border-dashed text-center">
                 <AlertCircle className="w-10 h-10 text-neutral-300 mx-auto mb-3" />
-                <p className="text-neutral-500 font-semibold">Unit inventory details will be released soon.</p>
+                <p className="text-neutral-500 font-semibold">{isCommercial ? 'Shop' : isResidential ? 'Apartment' : 'Property'} details will be released soon.</p>
               </div>
             )}
           </section>
@@ -294,7 +348,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                   <div>
                     <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Scale</p>
                     <p className="text-sm font-semibold text-[#0d1b2e]">
-                      {project.total_units || project.units.length} Total Units
+                      {project.type || 'Premium Development'}
                     </p>
                   </div>
                 </div>

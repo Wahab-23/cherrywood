@@ -666,10 +666,6 @@ export default function ProjectDashboardPage() {
             ) : updates.length > 0 ? (
               updates.map((upd) => (
                 <div key={upd.id} className="relative group">
-                  {/* Timeline icon dot */}
-                  <div className="absolute left-[50px] top-1.5 w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 bg-blue-600 text-white flex items-center justify-center font-mono font-black text-[10px] shadow-sm">
-                    {upd.progress_percentage ?? 0}%
-                  </div>
 
                   <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
                     <CardHeader className="px-8 py-5 border-b border-slate-50 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

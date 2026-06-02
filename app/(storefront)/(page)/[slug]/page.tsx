@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { Mail, Phone, Clock, MapPin, Briefcase, Heart, Shield, Scale, ArrowRight, Calendar, Sparkles, Compass, Hammer } from 'lucide-react'
 import BlockNoteRenderer from "@/components/blocknote/BlockNoteRenderer";
+import { ContactForm } from '@/components/storefront/ContactForm'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -180,18 +181,11 @@ export default async function StorefrontPage({ params }: PageProps) {
 
               {/* Display default form right on the page */}
               <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm space-y-4 mt-6">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 pb-2 border-b border-neutral-100">
                   <Sparkles className="w-4 h-4 text-amber-600" />
                   <h4 className="text-sm font-bold uppercase tracking-wider text-slate-700">Submit spatial request</h4>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input type="text" placeholder="Your Name" className="h-10 px-4 text-xs font-semibold border border-slate-200 rounded-xl focus:outline-none" />
-                  <input type="email" placeholder="Your Email" className="h-10 px-4 text-xs font-semibold border border-slate-200 rounded-xl focus:outline-none" />
-                </div>
-                <textarea placeholder="Tell us about your project dream or investment objective..." rows={3} className="w-full p-4 text-xs font-semibold border border-slate-200 rounded-xl resize-none focus:outline-none" />
-                <button className="bg-[#0d1b2e] hover:bg-[#1a2d44] text-white px-6 h-10 rounded-xl text-xs font-bold uppercase tracking-widest transition-all">
-                  Submit Reservation Request
-                </button>
+                <ContactForm theme="light" />
               </div>
             </div>
           </div>
@@ -363,7 +357,7 @@ export default async function StorefrontPage({ params }: PageProps) {
                       {article.category || 'Architecture'}
                     </span>
                     <a
-                      href={`/blog/${article.slug}`}
+                      href={`/journal/${article.slug}`}
                       className="text-xs font-bold uppercase tracking-wider flex items-center gap-1 hover:gap-2 transition-all"
                       style={{ color: data.theme_color || '#0d1b2e' }}
                     >
