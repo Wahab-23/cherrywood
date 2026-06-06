@@ -3,6 +3,20 @@
 import { useState } from 'react'
 import { submitContactForm } from '@/app/actions/contact'
 
+const COUNTRIES = [
+  { code: '+92', flag: '🇵🇰', name: 'PK' },
+  { code: '+971', flag: '🇦🇪', name: 'UAE' },
+  { code: '+90', flag: '🇹🇷', name: 'TR' },
+  { code: '+1', flag: '🇺🇸', name: 'US/CA' },
+  { code: '+44', flag: '🇬🇧', name: 'UK' },
+  { code: '+966', flag: '🇸🇦', name: 'SA' },
+  { code: '+61', flag: '🇦🇺', name: 'AU' },
+  { code: '+49', flag: '🇩🇪', name: 'DE' },
+  { code: '+33', flag: '🇫🇷', name: 'FR' },
+  { code: '+86', flag: '🇨🇳', name: 'CN' },
+  { code: '+65', flag: '🇸🇬', name: 'SG' },
+]
+
 export function ContactForm({
   defaultInterest,
   theme = 'dark',
@@ -13,6 +27,8 @@ export function ContactForm({
   className?: string
 } = {}) {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
+  const [countryCode, setCountryCode] = useState('+92')
+  const [localPhone, setLocalPhone] = useState('')
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -25,6 +41,8 @@ export function ContactForm({
     if (result.success) {
       setStatus('success')
       form.reset() // Use captured reference
+      setLocalPhone('')
+      setCountryCode('+92')
 
       // Auto dismiss success message after 5 seconds
       setTimeout(() => setStatus('idle'), 5000)
@@ -91,16 +109,51 @@ export function ContactForm({
         ))}
       </div>
 
-      {[
-        { id: 'phone', name: 'phone', label: 'Phone Number', type: 'tel', placeholder: '+92 300 0000000' },
-        { id: 'email', name: 'email', label: 'Email Address', type: 'email', placeholder: 'you@example.com' },
-      ].map(f => (
-        <div key={f.id} className="space-y-2">
-          <label htmlFor={`contact-${f.id}`} className={labelClasses}>{f.label}</label>
-          <input id={`contact-${f.id}`} name={f.name} type={f.type} placeholder={f.placeholder} required
-            className={inputClasses} />
+      <div className="space-y-2">
+        <label htmlFor="contact-email" className={labelClasses}>Email Address</label>
+        <input id="contact-email" name="email" type="email" placeholder="you@example.com" required
+          className={inputClasses} />
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="contact-phone-display" className={labelClasses}>Phone Number</label>
+        <div className={`flex items-center ${isDark
+          ? "bg-white/5 border border-white/10 text-white focus-within:border-[#c9a84c]/50 focus-within:ring-1 focus-within:ring-[#c9a84c]/50"
+          : "bg-slate-50 border border-slate-200 text-[#0d1b2e] focus-within:border-[#0d1b2e]/30 focus-within:ring-1 focus-within:ring-[#0d1b2e]/30 rounded-xl"
+          } transition-all duration-200 overflow-hidden`}>
+          <div className="relative flex items-center pr-1">
+            <select
+              value={countryCode}
+              onChange={(e) => setCountryCode(e.target.value)}
+              className={`bg-transparent pl-4 pr-7 py-3 text-sm focus:outline-none cursor-pointer appearance-none ${isDark ? 'text-white/80' : 'text-slate-800'
+                }`}
+            >
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code} className={isDark ? 'bg-[#0d1b2e] text-white' : 'bg-white text-slate-800'}>
+                  {c.flag} {c.code}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute right-1.5 flex items-center">
+              <svg className={`fill-current h-3.5 w-3.5 ${isDark ? 'text-white/40' : 'text-slate-500'}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+              </svg>
+            </div>
+          </div>
+          <div className={`h-6 w-px ${isDark ? 'bg-white/10' : 'bg-slate-200'}`} />
+          <input
+            id="contact-phone-display"
+            type="tel"
+            placeholder="300 0000000"
+            required
+            value={localPhone}
+            onChange={(e) => setLocalPhone(e.target.value)}
+            className={`w-full bg-transparent px-4 py-3 text-sm focus:outline-none placeholder:${isDark ? 'text-white/20' : 'text-slate-400/80'
+              }`}
+          />
         </div>
-      ))}
+        <input type="hidden" name="phone" value={`${countryCode} ${localPhone.trim()}`} />
+      </div>
 
       <div className="space-y-2">
         <label htmlFor="contact-interest" className={labelClasses}>I&apos;m Interested In</label>

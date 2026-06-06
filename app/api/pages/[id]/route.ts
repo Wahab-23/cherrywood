@@ -69,7 +69,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
             return NextResponse.json({ success: false, error: "Page not found" }, { status: 404 });
         }
 
-        const COMPULSORY_SLUGS = ['home', 'homepage', 'contact', 'contact-us', 'careers', 'terms', 'terms-and-conditions', 'privacy', 'privacy-policy', 'journal', 'blogs', 'blog'];
+        const COMPULSORY_SLUGS = ['home', 'contact', 'careers', 'terms', 'privacy', 'journal'];
         if (COMPULSORY_SLUGS.includes((existingPage.slug || '').toLowerCase())) {
             return NextResponse.json({ success: false, error: "Compulsory layout pages cannot be deleted." }, { status: 400 });
         }

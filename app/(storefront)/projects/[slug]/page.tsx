@@ -50,6 +50,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
+export async function generateStaticParams() {
+  const projects = await prisma.project.findMany({ select: { slug: true } })
+  return projects.map((p) => ({ slug: p.slug }))
+}
+
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params
   const project = await prisma.project.findUnique({
@@ -81,27 +86,41 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const singularLabel = isCommercial ? 'Shop' : isResidential ? 'Apartment' : 'Property'
   const sectionTitle = `Available ${unitSystemLabel}`
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'ApartmentComplex',
-    name: project.title,
-    description: project.description || undefined,
-    url: `${siteUrl}/projects/${project.slug}`,
-    image: project.hero_image || undefined,
-    address: project.location ? {
-      '@type': 'PostalAddress',
-      addressLocality: project.location,
-    } : undefined,
-    numberOfAvailableAccommodationUnits: availableUnits,
-    numberOfAccommodationUnits: project.units.length || project.total_units || undefined,
-  }
+  const schemaType = isCommercial ? 'ShoppingCenter' : 'ApartmentComplex'
+
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': schemaType,
+      name: project.title,
+      description: project.description || undefined,
+      url: `${siteUrl}/projects/${project.slug}`,
+      image: project.hero_image || undefined,
+      address: project.location ? {
+        '@type': 'PostalAddress',
+        addressLocality: project.location,
+        addressRegion: 'Karachi',
+        addressCountry: 'PK',
+      } : undefined,
+      numberOfAvailableAccommodationUnits: availableUnits,
+      numberOfAccommodationUnits: project.units.length || project.total_units || undefined,
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+        { '@type': 'ListItem', position: 2, name: 'Projects', item: `${siteUrl}/projects` },
+        { '@type': 'ListItem', position: 3, name: project.title, item: `${siteUrl}/projects/${project.slug}` },
+      ],
+    },
+  ]
 
   return (
     <div className="bg-[#fcfbf8] text-[#0d1b2e] min-h-screen selection:bg-[#0d1b2e] selection:text-white">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      {jsonLd.map((schema, i) => (
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      ))}
 
       {/* Hero Section */}
       <div className="relative h-[60vh] md:h-[75vh] w-full bg-[#0d1b2e]">

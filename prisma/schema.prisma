@@ -214,6 +214,7 @@ model Inquiry {
   name           String
   phone          String
   email          String
+  interest       String?
   preferred_date DateTime? @db.Date
   message        String?   @db.Text
   unit_id        String?

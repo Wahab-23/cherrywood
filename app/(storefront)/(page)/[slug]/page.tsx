@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { Mail, Phone, Clock, MapPin, Briefcase, Heart, Shield, Scale, ArrowRight, Calendar, Sparkles, Compass, Hammer } from 'lucide-react'
 import BlockNoteRenderer from "@/components/blocknote/BlockNoteRenderer";
@@ -11,10 +11,14 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
+  if (slug === 'home') {
+    redirect('/')
+  }
+  
   const record = await prisma.page.findUnique({ where: { slug } })
   if (!record) return {}
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywood.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywoodbuilders.com'
   const canonical = `${siteUrl}/${slug}`
   const title = record.meta_title || record.title || 'Cherrywood'
   const description = record.meta_description || 'Cherrywood Architectural & Luxury Spaces'
@@ -40,8 +44,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
+export async function generateStaticParams() {
+  const pages = await prisma.page.findMany({
+    where: { status: 'published', slug: { notIn: ['home'] } },
+    select: { slug: true },
+  })
+  return pages.map((p) => ({ slug: p.slug }))
+}
+
 export default async function StorefrontPage({ params }: PageProps) {
   const { slug } = await params
+  
+  if (slug === 'home') {
+    redirect('/')
+  }
+
   const page = await prisma.page.findUnique({ where: { slug } })
 
   if (!page || page.status !== 'published') {
@@ -95,8 +112,33 @@ export default async function StorefrontPage({ params }: PageProps) {
     })
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywoodbuilders.com'
+
+  // Build FAQPage JSON-LD if FAQs exist
+  const faqLd = faqs.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+    })),
+  } : null
+
+  // BreadcrumbList for all inner pages
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+      { '@type': 'ListItem', position: 2, name: page.title, item: `${siteUrl}/${slug}` },
+    ],
+  }
+
   return (
     <div className="bg-[#fcfbf8] text-[#0d1b2e] min-h-screen pt-36 lg:pt-48 pb-20 selection:bg-[#0d1b2e] selection:text-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      {faqLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />}
       {/* ──────────────────────────────────────────────────────────────────
           TEMPLATE 1: CONTACT DIRECTORY
       ────────────────────────────────────────────────────────────────── */}
@@ -295,9 +337,10 @@ export default async function StorefrontPage({ params }: PageProps) {
               {(data.sections || []).map((sec: any, i: number) => (
                 <div key={i} className="space-y-3">
                   <h3 className="text-lg font-serif text-[#0d1b2e] font-bold">{sec.title}</h3>
-                  <p className="text-sm text-slate-600 font-semibold leading-relaxed whitespace-pre-wrap">
-                    {sec.content}
-                  </p>
+                  <div 
+                    className="text-sm text-slate-600 font-semibold leading-relaxed prose prose-sm prose-slate max-w-none prose-p:my-1"
+                    dangerouslySetInnerHTML={{ __html: sec.content }}
+                  />
                 </div>
               ))}
 

@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Plus, Search, Edit, Trash2, Eye, Globe } from 'lucide-react'
-import { TEMPLATE_LABELS, isCompulsory } from '@/lib/pageConstants'
+import { TEMPLATE_LABELS, isCompulsory, COMPULSORY_PAGES } from '@/lib/pageConstants'
 
 export default function PagesPage() {
   const router = useRouter()
@@ -146,9 +146,16 @@ export default function PagesPage() {
                     </span>
                   </TableCell>
                   <TableCell className="py-4 font-semibold text-[13px] text-slate-700 dark:text-slate-300">
-                    <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[10px] font-bold px-2 py-1 rounded">
-                      {TEMPLATE_LABELS[page.template || 'default'] || page.template || 'Rich Text'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[10px] font-bold px-2 py-1 rounded">
+                        {TEMPLATE_LABELS[page.template || 'default'] || page.template || 'Rich Text'}
+                      </span>
+                      {isCompulsory(page.slug || '') && (
+                        <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-indigo-100 dark:border-indigo-900">
+                          System
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="py-4">
                     <Badge className={
@@ -179,7 +186,7 @@ export default function PagesPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => router.push(`/admin/n8_nwrr2675/pages/${page.id}`)}
+                        onClick={() => router.push(`/admin/n8_nwrr2675/pages/${page.id}/edit/${page.template || 'default'}`)}
                         className="w-8 h-8 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
                       >
                         <Edit className="w-4 h-4" />

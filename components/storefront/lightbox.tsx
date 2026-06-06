@@ -84,7 +84,7 @@ function LightboxModal({
 
     return (
         <div
-            className="fixed inset-0 z-[999] flex items-center justify-center"
+            className="fixed inset-0 z-999 flex items-center justify-center"
             style={{ background: 'rgba(13,27,46,0.97)' }}
             onClick={onClose}
         >
@@ -100,7 +100,7 @@ function LightboxModal({
             </div>
 
             <div
-                className="relative w-full max-w-4xl mx-6 aspect-[4/3]"
+                className="relative w-full max-w-4xl mx-6 aspect-4/3"
                 onClick={(e) => e.stopPropagation()}
             >
                 <Image

@@ -14,10 +14,11 @@ export interface BlockNoteEditorRef {
 interface BlockNoteEditorProps {
   initialContent?: string;
   placeholder?: string;
+  onChange?: (content: string) => void;
 }
 
 const BlockNoteEditor = forwardRef<BlockNoteEditorRef, BlockNoteEditorProps>(
-  ({ initialContent = '', placeholder = 'Start typing...' }, ref) => {
+  ({ initialContent = '', placeholder = 'Start typing...', onChange }, ref) => {
     const editor = useCreateBlockNote();
     const hasInitialized = useRef(false);
 
@@ -91,6 +92,12 @@ const BlockNoteEditor = forwardRef<BlockNoteEditorRef, BlockNoteEditorProps>(
           editor={editor}
           theme="light"
           className="blocknote-light bg-white h-auto"
+          onChange={async () => {
+            if (onChange) {
+              const html = await editor.blocksToHTMLLossy(editor.document);
+              onChange(html);
+            }
+          }}
         />
       </div>
     );

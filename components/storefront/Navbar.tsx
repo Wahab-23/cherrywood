@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Menu, X, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -84,9 +85,12 @@ export function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center group shrink-0">
-            <img
+            <Image
               src="/logo.jpg"
-              alt="Cherrywood Logo"
+              alt="Cherrywood — Ameer Hamza Builders & Developers"
+              width={200}
+              height={80}
+              priority
               className={cn(
                 'w-auto object-contain transition-all duration-300 group-hover:opacity-80',
                 isLightNav ? 'h-14 md:h-18' : 'h-16 md:h-20'

@@ -259,20 +259,29 @@ async function main() {
     },
   });
 
-  // 9. Pages
+  // 9. Pages — system (compulsory) pages are always seeded via upsert.
+  // These cannot be deleted or re-created; admins may only edit them.
   const pages = [
+    // ── Compulsory system pages ──────────────────────────────────────────
     {
-      title: 'About Cherrywood',
-      slug: 'about',
-      template: 'default',
-      content: JSON.stringify([{ type: 'paragraph', content: 'We build the future of living.' }]),
+      title: 'Homepage',
+      slug: 'home',
+      template: 'home',
+      content: getInitialTemplateContent('home'),
       status: 'published',
     },
     {
-      title: 'Contact Directory',
+      title: 'Contact Us',
       slug: 'contact',
       template: 'contact',
       content: getInitialTemplateContent('contact'),
+      status: 'published',
+    },
+    {
+      title: 'Careers at Cherrywood',
+      slug: 'careers',
+      template: 'careers',
+      content: getInitialTemplateContent('careers'),
       status: 'published',
     },
     {
@@ -295,13 +304,21 @@ async function main() {
       template: 'journal',
       content: getInitialTemplateContent('journal'),
       status: 'published',
-    }
+    },
+    // ── Non-compulsory pages ─────────────────────────────────────────────
+    {
+      title: 'About Cherrywood',
+      slug: 'about',
+      template: 'default',
+      content: JSON.stringify([{ type: 'paragraph', content: 'We build the future of living.' }]),
+      status: 'published',
+    },
   ];
 
   for (const page of pages) {
     await prisma.page.upsert({
       where: { slug: page.slug },
-      update: {},
+      update: {}, // Never overwrite existing admin edits
       create: page,
     });
   }

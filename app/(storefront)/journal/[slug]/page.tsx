@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import { Calendar, User, ArrowLeft, Clock } from 'lucide-react'
 import BlockNoteRenderer from '@/components/blocknote/BlockNoteRenderer'
@@ -17,8 +18,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   })
   if (!blog) return {}
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywood.com'
-  const canonical = `${siteUrl}/blog/${slug}`
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywoodbuilders.com'
+  const canonical = `${siteUrl}/journal/${slug}`
   const title = blog.meta_title || blog.title
   const description = blog.meta_description || blog.short_description || 'Perspectives on architecture, luxury spatial planning, and design thinking.'
   const ogImage = blog.hero_image || `${siteUrl}/building.png`
@@ -44,6 +45,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       images: [ogImage],
     },
   }
+}
+
+export async function generateStaticParams() {
+  const blogs = await prisma.blog.findMany({
+    where: { status: 'published' },
+    select: { slug: true },
+  })
+  return blogs.map((b) => ({ slug: b.slug }))
 }
 
 export default async function BlogDetailPage({ params }: PageProps) {
@@ -73,7 +82,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
   }
   const readingTime = Math.max(1, Math.ceil(wordCount / 200))
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywood.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywoodbuilders.com'
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -81,7 +90,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
     headline: blog.title,
     description: blog.short_description || undefined,
     image: blog.hero_image || undefined,
-    url: `${siteUrl}/blog/${blog.slug}`,
+    url: `${siteUrl}/journal/${blog.slug}`,
     datePublished: blog.published_at?.toISOString(),
     dateModified: blog.updated_at?.toISOString(),
     author: blog.author ? {
@@ -96,16 +105,24 @@ export default async function BlogDetailPage({ params }: PageProps) {
       name: 'Cherrywood',
       logo: { '@type': 'ImageObject', url: `${siteUrl}/logo.png` },
     },
-    mainEntityOfPage: { '@type': 'WebPage', '@id': `${siteUrl}/blog/${blog.slug}` },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `${siteUrl}/journal/${blog.slug}` },
     articleSection: blog.category.name,
+  }
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+      { '@type': 'ListItem', position: 2, name: 'Journal', item: `${siteUrl}/journal` },
+      { '@type': 'ListItem', position: 3, name: blog.title, item: `${siteUrl}/journal/${blog.slug}` },
+    ],
   }
 
   return (
     <div className="bg-[#fcfbf8] text-[#0d1b2e] min-h-screen pt-36 lg:pt-48 pb-20 selection:bg-[#0d1b2e] selection:text-white">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <article className="max-w-4xl mx-auto px-6 space-y-10">
 
         {/* Back Link */}
@@ -151,11 +168,14 @@ export default async function BlogDetailPage({ params }: PageProps) {
 
         {/* Cover Image */}
         {blog.hero_image && (
-          <div className="aspect-21/9 overflow-hidden bg-slate-100 shadow-sm border border-neutral-100">
-            <img
+          <div className="aspect-21/9 overflow-hidden bg-slate-100 shadow-sm border border-neutral-100 relative">
+            <Image
               src={blog.hero_image}
               alt={blog.title}
+              fill
+              priority
               className="w-full h-full object-cover"
+              sizes="(max-width: 896px) 100vw, 896px"
             />
           </div>
         )}

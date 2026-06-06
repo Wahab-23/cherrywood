@@ -15,7 +15,8 @@ import {
   Settings,
   ChevronRight,
   Bell,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Mail
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -120,6 +121,7 @@ function AdminLayoutContent({
     },
     { href: '/admin/n8_nwrr2675/pages', label: 'Pages', icon: FileText, resource: 'pages' },
     { href: '/admin/n8_nwrr2675/media', label: 'Media', icon: ImageIcon, resource: 'media' },
+    { href: '/admin/n8_nwrr2675/inquiries', label: 'Inquiries', icon: Mail, resource: 'inquiries' },
   ]
 
   const secondaryNavItems = [

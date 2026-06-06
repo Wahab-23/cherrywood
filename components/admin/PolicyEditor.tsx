@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Scale, Calendar, Plus, Trash2, AlignLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import BlockNoteEditor from '@/components/blocknote/blocknoteEditor'
 
 interface PolicySection {
   title: string
@@ -34,7 +35,19 @@ const defaultData: PolicyData = {
 }
 
 export default function PolicyEditor({ value, onChange }: PolicyEditorProps) {
-  const [data, setData] = useState<PolicyData>(defaultData)
+  const [data, setData] = useState<PolicyData>(() => {
+    if (value) {
+      try {
+        const parsed = JSON.parse(value)
+        if (parsed.template === 'policy' && parsed.data) {
+          return { ...defaultData, ...parsed.data }
+        }
+      } catch (e) {
+        // Not JSON
+      }
+    }
+    return defaultData
+  })
 
   useEffect(() => {
     if (value) {
@@ -175,11 +188,10 @@ export default function PolicyEditor({ value, onChange }: PolicyEditorProps) {
                   <Label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
                     <AlignLeft className="w-3 h-3 text-slate-400" /> Clause Body Text
                   </Label>
-                  <Textarea
-                    value={section.content}
-                    onChange={(e) => handleSectionChange(i, 'content', e.target.value)}
+                  <BlockNoteEditor
+                    initialContent={section.content}
+                    onChange={(html) => handleSectionChange(i, 'content', html)}
                     placeholder="Provide full legal/support content for this section..."
-                    className="min-h-[120px] text-xs leading-relaxed border-slate-200 rounded-lg bg-white resize-none p-3"
                   />
                 </div>
               </div>

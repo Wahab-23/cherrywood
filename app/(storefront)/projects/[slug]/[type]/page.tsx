@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ChevronLeft, BedDouble, Ruler, CheckCircle2 } from 'lucide-react'
 import { ContactForm } from '@/components/storefront/ContactForm'
 import { ImageGalleryLightbox } from '@/components/storefront/lightbox'
+import type { Metadata } from 'next'
 
 // ─── Type Metadata Registry ────────────────────────────────────────────────────
 type UnitTypeData = {
@@ -109,6 +110,50 @@ type PageProps = {
   }>
 }
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywoodbuilders.com'
+
+// ─── Static Params (pre-render all known types) ────────────────────────────────
+export function generateStaticParams() {
+  return [
+    { slug: 'cherrywood-tower', type: 'type-a' },
+    { slug: 'cherrywood-tower', type: 'type-b' },
+    { slug: 'cherrywood-tower', type: 'type-c' },
+  ]
+}
+
+// ─── Metadata ─────────────────────────────────────────────────────────────────
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug, type } = await params
+  const typeData = unitTypeRegistry[type]
+
+  if (!typeData) return {}
+
+  const projectName = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  const title = `${typeData.label} — ${projectName} | Cherrywood`
+  const description = typeData.description.slice(0, 155) + '…'
+  const canonical = `${siteUrl}/projects/${slug}/${type}`
+  const ogImage = typeData.galleryImages[0] || `${siteUrl}/cherrywood-tower.png`
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      type: 'website',
+      url: canonical,
+      title,
+      description,
+      images: [{ url: ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`, width: 1200, height: 630, alt: typeData.label }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`],
+    },
+  }
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 export default async function ApartmentTypePage({ params }: PageProps) {
   const { slug, type } = await params
@@ -136,9 +181,42 @@ export default async function ApartmentTypePage({ params }: PageProps) {
   }
 
   const allGallery = [...typeData.galleryImages]
+  const projectName = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Accommodation',
+      name: typeData.label,
+      description: typeData.description,
+      numberOfBedrooms: typeData.beds,
+      numberOfBathroomsTotal: typeData.baths,
+      floorSize: { '@type': 'QuantitativeValue', value: typeData.size, unitCode: 'SQF' },
+      image: typeData.galleryImages.map(img => img.startsWith('http') ? img : `${siteUrl}${img}`),
+      url: `${siteUrl}/projects/${slug}/${type}`,
+      containedInPlace: {
+        '@type': 'ApartmentComplex',
+        name: projectName,
+        url: `${siteUrl}/projects/${slug}`,
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+        { '@type': 'ListItem', position: 2, name: 'Projects', item: `${siteUrl}/projects` },
+        { '@type': 'ListItem', position: 3, name: projectName, item: `${siteUrl}/projects/${slug}` },
+        { '@type': 'ListItem', position: 4, name: typeData.label.split('—')[0].trim(), item: `${siteUrl}/projects/${slug}/${type}` },
+      ],
+    },
+  ]
 
   return (
     <div className="bg-[#fcfbf8] text-[#0d1b2e] min-h-screen selection:bg-[#0d1b2e] selection:text-white">
+      {jsonLd.map((schema, i) => (
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      ))}
 
       {/* ── Premium Hero Header ────────────────────────────────────────────── */}
       <div className="bg-[#0d1b2e] pt-40 pb-20">

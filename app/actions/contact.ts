@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { sendInquiryEmail } from '@/lib/mailer'
 
 export async function submitContactForm(formData: FormData) {
   try {
@@ -17,16 +18,26 @@ export async function submitContactForm(formData: FormData) {
       return { success: false, error: 'Name, email, and phone are required.' }
     }
 
-    const message = `Interest: ${interest}\n\nMessage: ${userMessage || 'No message provided'}`
-
     await prisma.inquiry.create({
       data: {
         name,
         email,
         phone,
-        message,
+        interest,
+        message: userMessage,
         status: 'new'
       }
+    })
+
+    // Send email notifications asynchronously without blocking the user response
+    sendInquiryEmail({
+      name,
+      email,
+      phone,
+      interest,
+      message: userMessage
+    }).catch(err => {
+      console.error('Error sending inquiry emails in background:', err)
     })
 
     return { success: true }

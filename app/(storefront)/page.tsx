@@ -13,14 +13,15 @@ import { TowerFeatures } from '@/components/storefront/TowerFeatures'
 // ── Meta ──────────────────────────────────────────────────────────────────────
 export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywoodbuilders.com'
+  const canonical = siteUrl
   return {
     title: 'Cherrywood Tower — Luxury Living in the Heart of Karachi',
     description:
       'Cherrywood Tower: a landmark residential & commercial development by Ameer Hamza Builders in the heart of Saddar, Karachi. Premium apartments & double-height retail shops.',
-    alternates: { canonical: `${siteUrl}/projects/cherrywood-tower` },
+    alternates: { canonical },
     openGraph: {
       type: 'website',
-      url: `${siteUrl}/projects/cherrywood-tower`,
+      url: canonical,
       title: 'Cherrywood Tower | Luxury Living in Saddar, Karachi',
       description:
         'Iconic mixed-use tower with 3-bedroom, 2-bedroom apartments, a rooftop garden, BBQ area, and double-height luxury retail shops.',
@@ -36,54 +37,77 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-type UnitGroup = {
-  type: string
-  label: string
-  beds: string
-  size: string
-  layoutImage: string
-  units: Awaited<ReturnType<typeof prisma.unit.findMany>>
-}
-
-// ── Page ──────────────────────────────────────────────────────────────────────
 export default async function CherrywoodTowerPage() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywoodbuilders.com'
 
-  const project = await prisma.project.findFirst({
-    where: { slug: 'cherrywood-tower' },
-    include: { units: { orderBy: { unit_number: 'asc' } } },
-  })
+  const [project, page] = await Promise.all([
+    prisma.project.findFirst({
+      where: { slug: 'cherrywood-tower' },
+      include: { units: { orderBy: { unit_number: 'asc' } } },
+    }),
+    prisma.page.findFirst({
+      where: {
+        OR: [
+          { slug: 'home' },
+          { template: 'home' }
+        ]
+      }
+    })
+  ])
+
+  let cmsData: any = null
+  if (page?.content) {
+    try {
+      cmsData = JSON.parse(page.content)
+    } catch (e) {
+      console.error("Failed to parse homepage content JSON:", e)
+    }
+  }
+
+  const getAmenityIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'Trees': return <Trees className="w-5 h-5" />
+      case 'ShieldCheck': return <ShieldCheck className="w-5 h-5" />
+      case 'Flame': return <Flame className="w-5 h-5" />
+      case 'Zap': return <Zap className="w-5 h-5" />
+      case 'Car': return <Car className="w-5 h-5" />
+      case 'Building2': return <Building2 className="w-5 h-5" />
+      case 'Wifi': return <Wifi className="w-5 h-5" />
+      case 'CheckCircle2': return <CheckCircle2 className="w-5 h-5" />
+      default: return <CheckCircle2 className="w-5 h-5" />
+    }
+  }
 
   const residentialUnits = project?.units.filter(u => u.type !== 'Double Height Retail Shop') ?? []
   const shopUnits = project?.units.filter(u => u.type === 'Double Height Retail Shop') ?? []
 
-  const unitGroups: UnitGroup[] = [
+  const activeUnitGroups = (cmsData?.apartments?.unit_types || [
     {
       type: 'Type A', label: '3 Bedroom',
       beds: '3 Bedrooms', size: '1,056 – 1,152 Sq.Ft.',
       layoutImage: '/uploads/homepage/type-a-3-bedroom-1780295250720.png',
-      units: residentialUnits.filter(u => u.unit_number.includes('Type A')),
     },
     {
       type: 'Type B', label: '2 Bedroom (Drawing)',
       beds: '2 Bedrooms + Drawing', size: '950 Sq.Ft.',
       layoutImage: '/uploads/homepage/type-b-2-bedroom--drawing--1780295255906.png',
-      units: residentialUnits.filter(u => u.unit_number.includes('Type B')),
     },
     {
       type: 'Type C', label: '2 Bedroom',
       beds: '2 Bedrooms + Lounge', size: '916 – 1,016 Sq.Ft.',
       layoutImage: '/uploads/homepage/type-c-2-bedroom-1780295260924.png',
-      units: residentialUnits.filter(u => u.unit_number.includes('Type C')),
-    },
-  ]
+    }
+  ]).map((ut: any) => ({
+    ...ut,
+    units: residentialUnits.filter((u: any) => u.unit_number.includes(ut.type))
+  }))
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ApartmentComplex',
-    name: 'Cherrywood Tower',
+    name: cmsData?.hero?.title ? `${cmsData.hero.title} ${cmsData.hero.italic_title}` : 'Cherrywood Tower',
     url: `${siteUrl}/projects/cherrywood-tower`,
-    description: 'Luxury mixed-use residential & commercial tower in Saddar, Karachi.',
+    description: cmsData?.hero?.description || 'Luxury mixed-use residential & commercial tower in Saddar, Karachi.',
     image: `${siteUrl}/cherrywood-tower.png`,
     address: {
       '@type': 'PostalAddress',
@@ -96,10 +120,7 @@ export default async function CherrywoodTowerPage() {
     numberOfAccommodationUnits: project?.total_units ?? 48,
   }
 
-  // NOC list — plain strings, no HTML injection needed
-  // FIXED: was using dangerouslySetInnerHTML on hardcoded strings with &amp; entities.
-  // React handles & in JSX directly. No innerHTML needed, no XSS risk.
-  const nocs = [
+  const defaultNocs = [
     'Survey of Pakistan (NOC)',
     'Karachi Water & Sewerage Board',
     'KE — K-Electric (NOC)',
@@ -110,24 +131,36 @@ export default async function CherrywoodTowerPage() {
     'SSGC — Sui Southern Gas',
   ]
 
+  const activeNocs = cmsData?.nocs || defaultNocs
+
+  const defaultTeamMembers = [
+    { role: 'Developer', name: 'Ameer Hamza Builders & Developers', desc: 'A renowned name in the construction industry — the mastermind behind this iconic development, bringing vision to reality.' },
+    { role: 'Structural Engineer', name: 'Combiner', desc: 'Responsible for the state-of-the-art architectural structure, ensuring every floor meets the highest standards of structural integrity.' },
+    { role: 'MEP Engineering', name: 'MV Nareen Associates', desc: 'Overseeing plumbing, electrical, and mechanical systems that power the building seamlessly day and night.' },
+    { role: 'Electrical Engineering', name: 'Hi-Tech Engineering', desc: 'A renowned electrical engineering firm that has ensured all wiring and installations are completely shock-proof and certified.' },
+    { role: 'Health, Safety & Environment', name: 'ME Pakistan', desc: 'A pioneer in environmental consultancy, ensuring internationally certified HSE standards are rigorously met throughout the project.' },
+    { role: 'Architectural Visualisation', name: 'Pixarch', desc: "One of the finest architectural visualisation companies in Pakistan — closely capturing how life will feel inside Cherrywood Tower." },
+  ]
+
+  const activeTeamMembers = cmsData?.team?.members || defaultTeamMembers
+
+  const defaultAmenities = [
+    { icon: 'Trees', title: 'Rooftop Garden', desc: 'A lush rooftop garden, BBQ area, gazebo, and jogging track — your private green retreat above the city.' },
+    { icon: 'ShieldCheck', title: '24/7 Security', desc: 'Round-the-clock CCTV surveillance and trained security personnel ensure complete peace of mind.' },
+    { icon: 'Flame', title: 'NFPA Fire System', desc: 'Equipped with internationally certified NFPA firefighting systems — your safety is non-negotiable.' },
+    { icon: 'Zap', title: 'Standby Generator', desc: 'Never experience a blackout. Full standby generator coverage keeps every floor powered at all times.' },
+    { icon: 'Car', title: 'Secure Parking', desc: 'Expansive, fully secured parking area with CCTV cameras and firefighting equipment in place.' },
+    { icon: 'Building2', title: 'Hi-Speed Lifts', desc: 'Multiple high-speed lifts ready to transport you to your floor swiftly and smoothly.' },
+    { icon: 'Wifi', title: 'Modern Electrical', desc: 'Shock-proof electrical systems by Hi-Tech Engineering. Every circuit is safety certified.' },
+    { icon: 'CheckCircle2', title: 'HSE Compliant', desc: 'Internationally certified Health, Safety & Environment standards ensured by ME Pakistan.' },
+  ]
+
+  const activeAmenities = cmsData?.amenities?.items || defaultAmenities
+
   return (
     <div className="bg-[#fcfbf8] text-[#0d1b2e] overflow-x-hidden relative">
-      {/* GLOBAL CONNECTED GEOMETRIC GRID */}
-      {/* <div className="absolute inset-0 pointer-events-none z-10 opacity-40" style={{
-        backgroundImage: 'linear-gradient(to right, rgba(201,168,76,0.3) 1px, transparent 1px), linear-gradient(to bottom, rgba(201,168,76,0.3) 1px, transparent 1px)',
-        backgroundSize: '120px 120px'
-      }} /> */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      {/* ════════════════════════════════════════════════════════════════════
-          GLOBAL ANIMATION STYLES
-          All defined here as real CSS keyframes — no custom Tailwind config
-          needed. Applied via className strings throughout.
-
-          FIXED: Previous code used animate-fade-in-up and delay-* classes
-          that don't exist in Tailwind by default. Those were silently doing
-          nothing. These keyframes are self-contained and always work.
-      ════════════════════════════════════════════════════════════════════ */}
       <style>{`
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(28px); filter: blur(3px); }
@@ -158,7 +191,6 @@ export default async function CherrywoodTowerPage() {
           to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* Hero entrance — staggered via animation-delay */
         .anim-eyebrow  { animation: fadeUp  0.8s cubic-bezier(0.16,1,0.3,1) 0.15s both; }
         .anim-h1       { animation: fadeUp  0.9s cubic-bezier(0.16,1,0.3,1) 0.30s both; }
         .anim-tagline  { animation: fadeUp  0.8s cubic-bezier(0.16,1,0.3,1) 0.45s both; }
@@ -168,11 +200,9 @@ export default async function CherrywoodTowerPage() {
         .anim-image    { animation: scaleIn 1.1s cubic-bezier(0.16,1,0.3,1) 0.20s both; }
         .anim-fade     { animation: fadeIn  1.2s ease 0.1s both; }
 
-        /* Marquee */
         .marquee-inner { animation: marqueescroll 32s linear infinite; }
         .marquee-inner:hover { animation-play-state: paused; }
 
-        /* Scroll-triggered reveal — JS toggles .revealed on scroll entry */
         .reveal {
           opacity: 0;
           transform: translateY(24px);
@@ -202,7 +232,6 @@ export default async function CherrywoodTowerPage() {
         }
         .reveal-right.revealed { opacity: 1; transform: translateX(0); }
 
-        /* Stagger children */
         .stagger > *:nth-child(1) { transition-delay: 0ms; }
         .stagger > *:nth-child(2) { transition-delay: 80ms; }
         .stagger > *:nth-child(3) { transition-delay: 160ms; }
@@ -212,7 +241,6 @@ export default async function CherrywoodTowerPage() {
         .stagger > *:nth-child(7) { transition-delay: 480ms; }
         .stagger > *:nth-child(8) { transition-delay: 560ms; }
 
-        /* Gold shimmer on hero headline hover */
         .headline-shimmer {
           background: linear-gradient(90deg, #ffffff 35%, #c9a84c 50%, #ffffff 65%);
           background-size: 250% auto;
@@ -229,7 +257,6 @@ export default async function CherrywoodTowerPage() {
           to   { background-position: -200% center; }
         }
 
-        /* Card lift */
         .card-lift {
           transition: transform 0.4s cubic-bezier(0.16,1,0.3,1),
                       box-shadow 0.4s ease,
@@ -240,7 +267,6 @@ export default async function CherrywoodTowerPage() {
           box-shadow: 0 16px 48px rgba(13,27,46,0.12);
         }
 
-        /* Gold line expand on card hover */
         .gold-line {
           width: 2rem;
           height: 1px;
@@ -249,7 +275,6 @@ export default async function CherrywoodTowerPage() {
         }
         .group:hover .gold-line { width: 100%; }
 
-        /* Bottom border sweep on material cards */
         .border-sweep {
           width: 0;
           height: 1px;
@@ -258,14 +283,12 @@ export default async function CherrywoodTowerPage() {
         }
         .group:hover .border-sweep { width: 100%; }
 
-        /* Floating building on hero */
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50%       { transform: translateY(-10px); }
         }
         .float { animation: float 7s ease-in-out infinite; }
 
-        /* Scroll indicator pulse */
         @keyframes scrollPulse {
           0%   { opacity: 0.4; transform: translateY(0) scaleY(1); }
           50%  { opacity: 1;   transform: translateY(4px) scaleY(1.1); }
@@ -274,7 +297,6 @@ export default async function CherrywoodTowerPage() {
         .scroll-pulse { animation: scrollPulse 2s ease-in-out infinite; }
       `}</style>
 
-      {/* Scroll reveal script — runs once after mount */}
       <Script id="scroll-reveal" strategy="afterInteractive">
         {`
           (function(){
@@ -292,15 +314,11 @@ export default async function CherrywoodTowerPage() {
         `}
       </Script>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          1. HERO
-      ════════════════════════════════════════════════════════════════════ */}
+      {/* 1. HERO */}
       <section id="hero" className="relative min-h-screen bg-[#0d1b2e] flex flex-col lg:flex-row overflow-hidden">
-
-        {/* Full-bleed bg image */}
         <div className="anim-fade absolute inset-0 lg:left-[45%]">
           <Image
-            src="/uploads/homepage/cherrywood-top.webp"
+            src={cmsData?.hero?.bg_image || "/uploads/homepage/cherrywood-top.webp"}
             loading="eager"
             alt="Cherrywood Tower exterior rendering at dusk"
             fill priority
@@ -310,19 +328,13 @@ export default async function CherrywoodTowerPage() {
           <div className="absolute inset-0 bg-linear-to-b from-[#0d1b2e]/80 via-[#0d1b2e]/40 to-[#0d1b2e] lg:bg-linear-to-r lg:from-[#0d1b2e] lg:via-[#0d1b2e]/50 lg:to-transparent" />
         </div>
 
-        {/* Subtle noise texture */}
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none opacity-[0.025] z-0"
           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`, backgroundSize: '128px' }}
         />
 
-
-
-        {/* Gold vertical accent */}
         <div aria-hidden="true" className="absolute top-0 right-0 w-px h-48 bg-linear-to-b from-[#c9a84c]/50 to-transparent hidden lg:block z-20" />
 
-        {/* Text column */}
         <div className="relative z-20 w-full lg:w-[50%] flex flex-col justify-center pt-40 pb-24 lg:py-0 px-6 md:px-12 lg:px-20 xl:px-28">
-
           <div className="anim-eyebrow flex items-center gap-3 mb-8">
             <span className="block w-8 h-px bg-[#c9a84c]" />
             <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">
@@ -330,60 +342,37 @@ export default async function CherrywoodTowerPage() {
             </span>
           </div>
 
-          {/*
-            FIXED: font-display removed — not a Tailwind utility unless registered
-            in tailwind.config. Using explicit font-serif which IS a Tailwind default.
-            If you have a custom display font, register it in config as fontFamily.display
-            then this class will work. For now: font-serif gives the elegant editorial feel.
-
-            FIXED: font-light italic at 7xl was reading as accidental.
-            Now using font-black on main word, font-light italic on the accent word —
-            the weight contrast IS the design, not a weakness.
-          */}
           <h1 className="headline-shimmer text-5xl md:text-6xl xl:text-7xl text-white leading-[1.05] tracking-tight mb-6">
-            <span className="font-black">Cherrywood</span><br />
-            <span className="font-light italic text-[#c9a84c]">Tower</span>
+            <span className="font-black">{cmsData?.hero?.title || "Cherrywood"}</span><br />
+            <span className="font-light italic text-[#c9a84c]">{cmsData?.hero?.italic_title || "Tower"}</span>
           </h1>
 
           <p className="anim-tagline text-base text-white/50 font-light leading-relaxed max-w-md mb-3">
-            Luxury living in the heart of the city.
+            {cmsData?.hero?.description || "Luxury living in the heart of the city."}
           </p>
 
           <div className="anim-location flex items-center gap-2 text-white/40 text-sm mb-12">
             <MapPin className="w-4 h-4 text-[#c9a84c] shrink-0" />
-            <span>Saddar, Karachi — Pakistan&apos;s Commercial Centre</span>
+            <span>{cmsData?.hero?.location || "Saddar, Karachi — Pakistan's Commercial Centre"}</span>
           </div>
 
           <div className="anim-ctas flex flex-wrap gap-4 mb-16">
-            {/*
-              Link handles hash hrefs natively — scrolls to #apartments on
-              the same page. No <a> needed, no page reload.
-            */}
-            <Link href="#apartments"
+            <Link href={cmsData?.hero?.cta_url || "#apartments"}
               className="group inline-flex items-center gap-3 bg-[#c9a84c] hover:bg-[#b8973d] text-[#0d1b2e] px-8 py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-colors duration-300">
-              Explore Units
+              {cmsData?.hero?.cta_label || "Explore Units"}
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300" />
             </Link>
-            {/*
-              "Register Interest" goes to /contact with source context in the
-              query string so the contact page knows where the user came from.
-              Far more useful than a blind scroll to a form on the same page.
-            */}
-            <Link href="/contact?from=cherrywood-tower&interest=register"
+            <Link href={cmsData?.hero?.cta_secondary_url || "/contact?from=cherrywood-tower&interest=register"}
               className="inline-flex items-center gap-3 border border-white/20 hover:border-[#c9a84c]/60 text-white/60 hover:text-white px-8 py-4 text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300">
-              Register Interest
+              {cmsData?.hero?.cta_secondary_label || "Register Interest"}
             </Link>
           </div>
 
-          {/*
-            FIXED: Stats — replaced meaningless "G+" with actual shop count from DB.
-            If shopUnits is empty (DB not loaded), falls back to the known count of 8.
-          */}
           <div className="anim-stats flex gap-10 pt-10 border-t border-white/10">
             {[
-              { value: '48', label: 'Residential Units' },
-              { value: '8+', label: 'NOCs & Approvals' },
-              { value: shopUnits.length > 0 ? String(shopUnits.length) : '8', label: 'Retail Shops' },
+              { value: cmsData?.hero?.stat_units_val || '48', label: cmsData?.hero?.stat_units_lbl || 'Residential Units' },
+              { value: cmsData?.hero?.stat_nocs_val || '8+', label: cmsData?.hero?.stat_nocs_lbl || 'NOCs & Approvals' },
+              { value: cmsData?.hero?.stat_retail_val || (shopUnits.length > 0 ? String(shopUnits.length) : '8'), label: cmsData?.hero?.stat_retail_lbl || 'Retail Shops' },
             ].map(s => (
               <div key={s.label}>
                 <p className="text-2xl font-black text-[#c9a84c] mb-1">{s.value}</p>
@@ -393,29 +382,24 @@ export default async function CherrywoodTowerPage() {
           </div>
         </div>
 
-        {/* Scroll indicator */}
         <div className="anim-stats absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-20 lg:flex">
           <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/20">Scroll</span>
           <div className="scroll-pulse w-px h-10 bg-linear-to-b from-white/30 to-transparent" />
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          2. MARQUEE
-      ════════════════════════════════════════════════════════════════════ */}
+      {/* 2. MARQUEE */}
       <div className="relative z-20 bg-[#c9a84c] py-3.5 overflow-hidden">
         <div className="marquee-inner flex whitespace-nowrap">
           {Array.from({ length: 8 }).map((_, i) => (
             <span key={i} className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0d1b2e] pr-14">
-              Cherrywood Tower &nbsp;•&nbsp; Luxury Residences &nbsp;•&nbsp; Saddar, Karachi &nbsp;•&nbsp; Premium Retail Shops &nbsp;•&nbsp; Rooftop Garden &nbsp;•
+              {cmsData?.marquee || "Cherrywood Tower • Luxury Residences • Saddar, Karachi • Premium Retail Shops • Rooftop Garden •"}
             </span>
           ))}
         </div>
       </div>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          3. LOCATION
-      ════════════════════════════════════════════════════════════════════ */}
+      {/* 3. LOCATION */}
       <section className="py-28 md:py-36 bg-white">
         <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
@@ -423,25 +407,24 @@ export default async function CherrywoodTowerPage() {
             <div className="reveal-left lg:col-span-5 space-y-6">
               <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Location</span>
               <h2 className="text-4xl md:text-5xl font-black text-[#0d1b2e] leading-tight">
-                Saddar —<br />
-                <span className="font-light italic">An Enviable Address</span>
+                {cmsData?.location?.title || "Saddar —"}<br />
+                <span className="font-light italic">{cmsData?.location?.italic_title || "An Enviable Address"}</span>
               </h2>
               <div className="gold-line" />
               <p className="text-sm text-neutral-500 font-light leading-relaxed">
-                Karachi&apos;s commercial and cultural epicentre. Saddar places you moments from premier medical centres, top-class schools and colleges, and every necessity of modern life — while positioning your investment in one of the city&apos;s most sought-after addresses.
+                {cmsData?.location?.description || "Karachi's commercial and cultural epicentre. Saddar places you moments from premier medical centres, top-class schools and colleges, and every necessity of modern life — while positioning your investment in one of the city's most sought-after addresses."}
               </p>
               <div className="flex items-start gap-3 pt-4">
                 <MapPin className="w-5 h-5 text-[#c9a84c] mt-0.5 shrink-0" />
                 <p className="text-sm font-semibold text-[#0d1b2e]">
-                  Plot No. 125 Katrak Road, Depot Lines,<br />
-                  Saddar, Karachi — 74200, Pakistan
+                  {cmsData?.location?.address || "Plot No. 125 Katrak Road, Depot Lines, Saddar, Karachi — 74200, Pakistan"}
                 </p>
               </div>
             </div>
 
             <div className="reveal-right lg:col-span-7">
               <div className="grid grid-cols-2 gap-3 stagger">
-                {[
+                {(cmsData?.location?.landmarks || [
                   { label: 'Karachi Lighthouse', dist: '0.3 km' },
                   { label: 'Empress Market', dist: '0.6 km' },
                   { label: 'Avari Towers', dist: '0.8 km' },
@@ -450,7 +433,7 @@ export default async function CherrywoodTowerPage() {
                   { label: 'Burns Road', dist: '0.5 km' },
                   { label: 'Rainbow Centre', dist: '0.4 km' },
                   { label: 'Garden West', dist: '0.7 km' },
-                ].map(loc => (
+                ]).map((loc: any) => (
                   <div key={loc.label}
                     className="reveal flex items-center justify-between p-4 border border-neutral-100 bg-[#fcfbf8] hover:border-[#c9a84c]/40 hover:bg-white transition-all duration-300">
                     <span className="text-sm font-semibold text-[#0d1b2e]">{loc.label}</span>
@@ -464,62 +447,52 @@ export default async function CherrywoodTowerPage() {
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          4. THE TOWER
-      ════════════════════════════════════════════════════════════════════ */}
+      {/* 4. THE TOWER */}
       <section id="tower" className="relative py-28 md:py-36 bg-[#0d1b2e] text-white overflow-hidden">
-
         <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
-
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-end mb-20">
             <div className="reveal-left lg:col-span-7 space-y-6">
               <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">The Development</span>
               <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
-                Modern Luxury<br />
-                <span className="font-light italic">at the Centre of the City</span>
+                {cmsData?.development?.title || "Modern Luxury"}<br />
+                <span className="font-light italic">{cmsData?.development?.italic_title || "at the Centre of the City"}</span>
               </h2>
             </div>
             <div className="reveal-right lg:col-span-5">
               <p className="text-sm text-white/50 font-light leading-relaxed">
-                Cherrywood Tower is the perfect combination of sophistication and convenience. Elegantly styled with one of the best architectural designs, it houses premium residences above a grand lobby, wide hallways, and high-speed lifts — with double-height luxury retail shops at street level.
+                {cmsData?.development?.description || "Cherrywood Tower is the perfect combination of sophistication and convenience. Elegantly styled with one of the best architectural designs, it houses premium residences above a grand lobby, wide hallways, and high-speed lifts — with double-height luxury retail shops at street level."}
               </p>
             </div>
           </div>
 
-          <TowerFeatures />
+          <TowerFeatures features={cmsData?.development?.features} />
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          5. APARTMENTS
-      ════════════════════════════════════════════════════════════════════ */}
+      {/* 5. APARTMENTS */}
       <section id="apartments" className="relative py-28 md:py-36 bg-[#f7f5f0] overflow-hidden">
-
         <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
-
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
             <div className="reveal space-y-4">
               <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Residences</span>
               <h2 className="text-4xl md:text-5xl font-black text-[#0d1b2e] leading-tight">
-                <span className="font-light italic">Comfort Beyond</span><br />
-                Imagination
+                <span className="font-light italic">{cmsData?.apartments?.title || "Comfort Beyond"}</span><br />
+                {cmsData?.apartments?.italic_title || "Imagination"}
               </h2>
             </div>
             <p className="reveal text-sm text-neutral-500 font-light max-w-xs leading-relaxed">
-              Enter a spacious lounge as you turn the key to your luxury apartment. Full-length windows, onyx-topped kitchens, elegant master bedrooms, and spa-quality bathrooms await.
+              {cmsData?.apartments?.description || "Enter a spacious lounge as you turn the key to your luxury apartment. Full-length windows, onyx-topped kitchens, elegant master bedrooms, and spa-quality bathrooms await."}
             </p>
           </div>
 
           <div className="reveal relative w-full h-[250px] sm:h-[350px] md:h-[460px] overflow-hidden mb-16">
-            <Image src="/uploads/homepage/spacious-lounge.webp" alt="Cherrywood Tower luxury apartment interior"
+            <Image src={cmsData?.apartments?.image || "/uploads/homepage/spacious-lounge.webp"} alt="Cherrywood Tower luxury apartment interior"
               fill className="object-cover" sizes="100vw" />
             <div className="absolute inset-0 bg-linear-to-t from-[#f7f5f0] via-transparent to-transparent" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 stagger">
-            {unitGroups.map(group => {
-              const available = group.units.filter(u => u.status === 'available').length
-              const total = group.units.length
+            {activeUnitGroups.map((group: any) => {
               return (
                 <div key={group.type}
                   className="reveal card-lift bg-white border border-neutral-100 group flex flex-col justify-between">
@@ -528,7 +501,6 @@ export default async function CherrywoodTowerPage() {
                       <span className="text-[9px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">{group.type}</span>
                       <h3 className="text-2xl font-black text-white mt-1">{group.label}</h3>
                     </div>
-                    {/* Apartment Layout Plan Image */}
                     <div className="relative w-full h-56 bg-neutral-50/50 border-b border-neutral-100 overflow-hidden group/img flex items-center justify-center">
                       <Image
                         src={group.layoutImage}
@@ -558,11 +530,6 @@ export default async function CherrywoodTowerPage() {
                     </div>
                   </div>
                   <div className="px-8 pb-8">
-                    {/*
-                      Passes unit type as a query param so the contact page
-                      can pre-select the right option in the dropdown.
-                      ?interest=type-a / type-b / type-c
-                    */}
                     <Link
                       href={`/projects/cherrywood-tower/${group.type.toLowerCase().replace(' ', '-')}`}
                       className="block w-full text-center border border-[#0d1b2e] hover:bg-[#0d1b2e] hover:text-white text-[#0d1b2e] py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300"
@@ -577,9 +544,7 @@ export default async function CherrywoodTowerPage() {
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          6. RETAIL SHOPS
-      ════════════════════════════════════════════════════════════════════ */}
+      {/* 6. RETAIL SHOPS */}
       <section className="py-28 md:py-36 bg-white">
         <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
@@ -587,15 +552,15 @@ export default async function CherrywoodTowerPage() {
             <div className="reveal-left lg:col-span-5 space-y-6">
               <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Commercial</span>
               <h2 className="text-4xl md:text-5xl font-black text-[#0d1b2e] leading-tight">
-                Grand Shops —<br />
-                <span className="font-light italic">A Smart Investment</span>
+                {cmsData?.retail?.title || "Grand Shops —"}<br />
+                <span className="font-light italic">{cmsData?.retail?.italic_title || "A Smart Investment"}</span>
               </h2>
               <div className="gold-line" />
               <p className="text-sm text-neutral-500 font-light leading-relaxed">
-                Enjoying a prime Saddar location — dubbed the commercial hub of Karachi — the project is a haven for investors. Double-height shops at the ground floor give ample business opportunity with guaranteed footfall, enabling businessmen to multiply profits rapidly.
+                {cmsData?.retail?.description || "Enjoying a prime Saddar location — dubbed the commercial hub of Karachi — the project is a haven for investors. Double-height shops at the ground floor give ample business opportunity with guaranteed footfall, enabling businessmen to multiply profits rapidly."}
               </p>
               <p className="text-sm text-neutral-500 font-light leading-relaxed">
-                Shops are exclusively designed for high-end brands and luxury items. Spacious interiors allow elegant product display, creating a one-of-a-kind experience for every customer.
+                {cmsData?.retail?.secondary_description || "Shops are exclusively designed for high-end brands and luxury items. Spacious interiors allow elegant product display, creating a one-of-a-kind experience for every customer."}
               </p>
 
               {shopUnits.length > 0 && (
@@ -620,14 +585,14 @@ export default async function CherrywoodTowerPage() {
 
               <Link href="/contact?from=cherrywood-tower&interest=retail-shop"
                 className="group inline-flex items-center gap-3 bg-[#c9a84c] hover:bg-[#b8973d] text-[#0d1b2e] px-8 py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-colors duration-300">
-                Invest in a Shop
+                {cmsData?.retail?.cta_label || "Invest in a Shop"}
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300" />
               </Link>
             </div>
 
             <div className="reveal-right lg:col-span-7">
               <div className="relative w-full h-[320px] sm:h-[420px] md:h-[520px] lg:h-[600px] overflow-hidden bg-[#0d1b2e]">
-                <Image src="/uploads/homepage/cherrywood-shops.webp" loading="eager" alt="Cherrywood Tower ground floor retail shops"
+                <Image src={cmsData?.retail?.image || "/uploads/homepage/cherrywood-shops.webp"} loading="eager" alt="Cherrywood Tower ground floor retail shops"
                   fill className="object-cover opacity-80 hover:opacity-90 transition-opacity duration-700"
                   sizes="(max-width: 1024px) 100vw, 58vw" />
                 <div className="absolute inset-0 bg-linear-to-t from-[#0d1b2e]/70 to-transparent" />
@@ -642,35 +607,23 @@ export default async function CherrywoodTowerPage() {
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          7. AMENITIES
-      ════════════════════════════════════════════════════════════════════ */}
+      {/* 7. AMENITIES */}
       <section id="amenities" className="py-28 md:py-36 bg-[#0d1b2e] text-white">
         <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
-
           <div className="reveal max-w-3xl mb-20 space-y-4">
             <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Lifestyle</span>
             <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
-              City Outside,<br />
-              <span className="font-light italic">Tranquillity Inside</span>
+              {cmsData?.amenities?.title || "City Outside,"}<br />
+              <span className="font-light italic">{cmsData?.amenities?.italic_title || "Tranquillity Inside"}</span>
             </h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 stagger">
-            {[
-              { icon: <Trees className="w-5 h-5" />, title: 'Rooftop Garden', desc: 'A lush rooftop garden, BBQ area, gazebo, and jogging track — your private green retreat above the city.' },
-              { icon: <ShieldCheck className="w-5 h-5" />, title: '24/7 Security', desc: 'Round-the-clock CCTV surveillance and trained security personnel ensure complete peace of mind.' },
-              { icon: <Flame className="w-5 h-5" />, title: 'NFPA Fire System', desc: 'Equipped with internationally certified NFPA firefighting systems — your safety is non-negotiable.' },
-              { icon: <Zap className="w-5 h-5" />, title: 'Standby Generator', desc: 'Never experience a blackout. Full standby generator coverage keeps every floor powered at all times.' },
-              { icon: <Car className="w-5 h-5" />, title: 'Secure Parking', desc: 'Expansive, fully secured parking area with CCTV cameras and firefighting equipment in place.' },
-              { icon: <Building2 className="w-5 h-5" />, title: 'Hi-Speed Lifts', desc: 'Multiple high-speed lifts ready to transport you to your floor swiftly and smoothly.' },
-              { icon: <Wifi className="w-5 h-5" />, title: 'Modern Electrical', desc: 'Shock-proof electrical systems by Hi-Tech Engineering. Every circuit is safety certified.' },
-              { icon: <CheckCircle2 className="w-5 h-5" />, title: 'HSE Compliant', desc: 'Internationally certified Health, Safety & Environment standards ensured by ME Pakistan.' },
-            ].map((am, i) => (
+            {activeAmenities.map((am: any, i: number) => (
               <div key={i}
                 className="reveal group card-lift bg-white/5 border border-white/10 p-8 space-y-4 hover:bg-white/10 hover:border-[#c9a84c]/30">
                 <div className="w-10 h-10 border border-[#c9a84c]/40 flex items-center justify-center text-[#c9a84c] group-hover:bg-[#c9a84c] group-hover:border-[#c9a84c] group-hover:text-[#0d1b2e] transition-all duration-300">
-                  {am.icon}
+                  {getAmenityIcon(am.icon)}
                 </div>
                 <h3 className="text-base font-bold text-white group-hover:text-[#c9a84c] transition-colors duration-300">{am.title}</h3>
                 <p className="text-xs text-white/50 font-light leading-relaxed">{am.desc}</p>
@@ -680,9 +633,7 @@ export default async function CherrywoodTowerPage() {
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          8. NOCs & APPROVALS
-      ════════════════════════════════════════════════════════════════════ */}
+      {/* 8. NOCs & APPROVALS */}
       <section id="approvals" className="py-24 bg-white border-y border-neutral-100">
         <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
           <div className="reveal text-center mb-14 space-y-3">
@@ -695,9 +646,8 @@ export default async function CherrywoodTowerPage() {
             </p>
           </div>
 
-          {/* FIXED: dangerouslySetInnerHTML removed. Plain JSX strings handle & correctly. */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 stagger">
-            {nocs.map(noc => (
+            {activeNocs.map((noc: string) => (
               <div key={noc}
                 className="reveal bg-white/5 backdrop-blur-lg flex items-center gap-3 p-4 border border-neutral-100 hover:border-[#c9a84c]/30 hover:bg-[#fcfbf8] transition-all duration-300">
                 <CheckCircle2 className="w-4 h-4 text-[#c9a84c] shrink-0" />
@@ -708,28 +658,19 @@ export default async function CherrywoodTowerPage() {
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          9. THE WINNING TEAM
-      ════════════════════════════════════════════════════════════════════ */}
+      {/* 9. THE WINNING TEAM */}
       <section className="py-28 md:py-36 bg-[#f7f5f0]">
         <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
           <div className="reveal max-w-3xl mb-16 space-y-4">
             <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Expert Collaboration</span>
-            <h2 className="text-4xl md:text-5xl font-black text-[#0d1b2e] leading-tight">The Winning Team</h2>
+            <h2 className="text-4xl md:text-5xl font-black text-[#0d1b2e] leading-tight">{cmsData?.team?.title || "The Winning Team"}</h2>
             <p className="text-sm text-neutral-500 font-light max-w-xl leading-relaxed">
-              A team of highly skilled experts have joined hands to make Cherrywood Tower a success — from architecture and structure to electrical, safety, and visual excellence.
+              {cmsData?.team?.description || "A team of highly skilled experts have joined hands to make Cherrywood Tower a success — from architecture and structure to electrical, safety, and visual excellence."}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 stagger">
-            {[
-              { role: 'Developer', name: 'Ameer Hamza Builders & Developers', desc: 'A renowned name in the construction industry — the mastermind behind this iconic development, bringing vision to reality.' },
-              { role: 'Structural Engineer', name: 'Combiner', desc: 'Responsible for the state-of-the-art architectural structure, ensuring every floor meets the highest standards of structural integrity.' },
-              { role: 'MEP Engineering', name: 'MV Nareen Associates', desc: 'Overseeing plumbing, electrical, and mechanical systems that power the building seamlessly day and night.' },
-              { role: 'Electrical Engineering', name: 'Hi-Tech Engineering', desc: 'A renowned electrical engineering firm that has ensured all wiring and installations are completely shock-proof and certified.' },
-              { role: 'Health, Safety & Environment', name: 'ME Pakistan', desc: 'A pioneer in environmental consultancy, ensuring internationally certified HSE standards are rigorously met throughout the project.' },
-              { role: 'Architectural Visualisation', name: 'Pixarch', desc: "One of the finest architectural visualisation companies in Pakistan — closely capturing how life will feel inside Cherrywood Tower." },
-            ].map((member, i) => (
+            {activeTeamMembers.map((member: any, i: number) => (
               <div key={i}
                 className="reveal group card-lift bg-white border border-neutral-100 p-8 space-y-4">
                 <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#c9a84c]">{member.role}</span>
@@ -743,60 +684,57 @@ export default async function CherrywoodTowerPage() {
           </div>
         </div>
       </section>
+      {/* 10. CONTACT */}
+      {cmsData?.display_form !== false && (
+        <section id="contact" className="py-28 md:py-36 bg-[#0d1b2e] relative overflow-hidden">
+          {/* Radial gold ambient glow */}
+          <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse 50% 50% at 80% 50%, rgba(201,168,76,0.06), transparent)' }} />
 
-      {/* ════════════════════════════════════════════════════════════════════
-          10. CONTACT
-          TODO: Wire this form to a server action or API route.
-                Currently collects input but submit button does nothing.
-      ════════════════════════════════════════════════════════════════════ */}
-      <section id="contact" className="py-28 md:py-36 bg-[#0d1b2e] relative overflow-hidden">
-        {/* Radial gold ambient glow */}
-        <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 50% 50% at 80% 50%, rgba(201,168,76,0.06), transparent)' }} />
+          <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
 
-        <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
+              {/* Left */}
+              <div className="reveal-left lg:col-span-5 space-y-8">
+                <div className="space-y-4">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Get In Touch</span>
+                  <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
+                    Feel the Change<br />
+                    <span className="font-light italic">in Your Life</span>
+                  </h2>
+                </div>
+                <p className="text-sm text-white/50 font-light leading-relaxed">
+                  Register your interest today and our team will get back to you with exclusive floor plans, updated pricing, and private viewing arrangements.
+                </p>
 
-            {/* Left */}
-            <div className="reveal-left lg:col-span-5 space-y-8">
-              <div className="space-y-4">
-                <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Get In Touch</span>
-                <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
-                  Feel the Change<br />
-                  <span className="font-light italic">in Your Life</span>
-                </h2>
-              </div>
-              <p className="text-sm text-white/50 font-light leading-relaxed">
-                Register your interest today and our team will get back to you with exclusive floor plans, updated pricing, and private viewing arrangements.
-              </p>
-
-              <div className="space-y-5 pt-4 border-t border-white/10">
-                {[
-                  { icon: <Phone className="w-4 h-4" />, label: 'Phone', content: <a href="tel:+923111854854" className="text-sm font-semibold text-white hover:text-[#c9a84c] transition-colors">+92 3111 854 854</a> },
-                  { icon: <Mail className="w-4 h-4" />, label: 'Email', content: <a href="mailto:info@cherrywoodbuilders.com" className="text-sm font-semibold text-white hover:text-[#c9a84c] transition-colors">info@cherrywoodbuilders.com</a> },
-                  { icon: <MapPin className="w-4 h-4" />, label: 'Address', content: <p className="text-sm font-semibold text-white/80 leading-relaxed">Plot No. 125 Katrak Road,<br />Depot Lines, Saddar,<br />Karachi — 74200, Pakistan</p> },
-                ].map(item => (
-                  <div key={item.label} className="flex items-start gap-4">
-                    <div className="w-10 h-10 border border-[#c9a84c]/30 flex items-center justify-center text-[#c9a84c] shrink-0">
-                      {item.icon}
+                <div className="space-y-5 pt-4 border-t border-white/10">
+                  {[
+                    { icon: <Phone className="w-4 h-4" />, label: 'Phone', content: <a href="tel:+923111854854" className="text-sm font-semibold text-white hover:text-[#c9a84c] transition-colors">+92 3111 854 854</a> },
+                    { icon: <Mail className="w-4 h-4" />, label: 'Email', content: <a href="mailto:info@cherrywoodbuilders.com" className="text-sm font-semibold text-white hover:text-[#c9a84c] transition-colors">info@cherrywoodbuilders.com</a> },
+                    { icon: <MapPin className="w-4 h-4" />, label: 'Address', content: <p className="text-sm font-semibold text-white/80 leading-relaxed">Plot No. 125 Katrak Road,<br />Depot Lines, Saddar,<br />Karachi — 74200, Pakistan</p> },
+                  ].map(item => (
+                    <div key={item.label} className="flex items-start gap-4">
+                      <div className="w-10 h-10 border border-[#c9a84c]/30 flex items-center justify-center text-[#c9a84c] shrink-0">
+                        {item.icon}
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-0.5">{item.label}</p>
+                        {item.content}
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-0.5">{item.label}</p>
-                      {item.content}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Right: Form */}
-            <div className="reveal-right lg:col-span-7">
-              <ContactForm />
-            </div>
+              {/* Right: Form */}
+              <div className="reveal-right lg:col-span-7">
+                <ContactForm />
+              </div>
 
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   )
 }

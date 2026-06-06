@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { MapPin, Phone, Mail } from 'lucide-react'
 
 const footerLinks = {
@@ -52,9 +53,11 @@ export function Footer() {
           {/* Brand column */}
           <div className="lg:col-span-5 space-y-8">
             <Link href="/" className="inline-block group">
-              <img
+              <Image
                 src="/logo.jpg"
-                alt="Cherrywood Builders Logo"
+                alt="Cherrywood Builders — Ameer Hamza Builders & Developers"
+                width={200}
+                height={80}
                 className="h-16 w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
               />
             </Link>

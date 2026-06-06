@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 
-const features = [
+const defaultFeatures = [
   {
     title: 'Grand Lobby',
     desc: 'A glamorous and modern entrance exuding luxury and finesse — the stylish lobby dazzles from first impression.',
@@ -26,7 +26,7 @@ const features = [
   },
 ]
 
-export function TowerFeatures() {
+export function TowerFeatures({ features = defaultFeatures }: { features?: typeof defaultFeatures }) {
   const [activeIndex, setActiveIndex] = useState(0)
 
   return (
