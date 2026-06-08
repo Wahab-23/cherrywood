@@ -62,7 +62,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<Pa
 
         // Only hash and update the password if explicitly provided
         if (password) {
-            data.password = await bcrypt.hash(password, 10);
+            data.password = await bcrypt.hash(password, 12);
         }
 
         const user = await prisma.user.update({

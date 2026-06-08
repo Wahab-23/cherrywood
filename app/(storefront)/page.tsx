@@ -84,23 +84,53 @@ export default async function CherrywoodTowerPage() {
   const activeUnitGroups = (cmsData?.apartments?.unit_types || [
     {
       type: 'Type A', label: '3 Bedroom',
-      beds: '3 Bedrooms', size: '1,056 – 1,152 Sq.Ft.',
+      beds: '3 Bedrooms', size: '1,656 To 1,752 Sq.Ft.',
       layoutImage: '/uploads/homepage/type-a-3-bedroom-1780295250720.png',
     },
     {
       type: 'Type B', label: '2 Bedroom (Drawing)',
-      beds: '2 Bedrooms + Drawing', size: '950 Sq.Ft.',
+      beds: '2 Bedrooms + Drawing', size: '1,248 To 1,328 Sq.Ft.',
       layoutImage: '/uploads/homepage/type-b-2-bedroom--drawing--1780295255906.png',
     },
     {
-      type: 'Type C', label: '2 Bedroom',
-      beds: '2 Bedrooms + Lounge', size: '916 – 1,016 Sq.Ft.',
+      type: 'Type C', label: '2 Bedroom + Lounge',
+      beds: '2 Bedrooms + Lounge', size: '916 To 1,016 Sq.Ft.',
       layoutImage: '/uploads/homepage/type-c-2-bedroom-1780295260924.png',
     }
-  ]).map((ut: any) => ({
-    ...ut,
-    units: residentialUnits.filter((u: any) => u.unit_number.includes(ut.type))
-  }))
+  ]).map((ut: any) => {
+    // Override sizes and labels dynamically to ensure they match exact requirements
+    let size = ut.size;
+    let label = ut.label;
+    if (ut.type === 'Type A' || ut.type?.includes('Type A')) {
+      size = '1,656 To 1,752 Sq.Ft.';
+    } else if (ut.type === 'Type B' || ut.type?.includes('Type B')) {
+      size = '1,248 To 1,328 Sq.Ft.';
+    } else if (ut.type === 'Type C' || ut.type?.includes('Type C')) {
+      size = '916 To 1,016 Sq.Ft.';
+      label = '2 Bedroom + Lounge';
+    }
+
+    const units = residentialUnits.filter((u: any) => u.unit_number.includes(ut.type));
+    let status = 'available';
+    if (units.length > 0) {
+      if (units.some((u: any) => u.status === 'available')) {
+        status = 'available';
+      } else if (units.some((u: any) => u.status === 'limited')) {
+        status = 'limited';
+      } else if (units.some((u: any) => u.status === 'booked')) {
+        status = 'booked';
+      } else {
+        status = 'sold';
+      }
+    }
+    return {
+      ...ut,
+      label,
+      size,
+      units,
+      status
+    };
+  })
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -315,7 +345,7 @@ export default async function CherrywoodTowerPage() {
       </Script>
 
       {/* 1. HERO */}
-      <section id="hero" className="relative min-h-screen bg-[#0d1b2e] flex flex-col lg:flex-row overflow-hidden">
+      <section id="hero" className="relative min-h-screen bg-[#0d1b2e] flex flex-col lg:flex-row overflow-hidden pt-10 md:pt-12">
         <div className="anim-fade absolute inset-0 lg:left-[45%]">
           <Image
             src={cmsData?.hero?.bg_image || "/uploads/homepage/cherrywood-top.webp"}
@@ -334,7 +364,7 @@ export default async function CherrywoodTowerPage() {
 
         <div aria-hidden="true" className="absolute top-0 right-0 w-px h-48 bg-linear-to-b from-[#c9a84c]/50 to-transparent hidden lg:block z-20" />
 
-        <div className="relative z-20 w-full lg:w-[50%] flex flex-col justify-center pt-40 pb-24 lg:py-0 px-6 md:px-12 lg:px-20 xl:px-28">
+        <div className="relative z-20 w-full lg:w-[50%] flex flex-col justify-center pt-12 pb-24 lg:py-16 px-6 md:px-12 lg:px-20 xl:px-28">
           <div className="anim-eyebrow flex items-center gap-3 mb-8">
             <span className="block w-8 h-px bg-[#c9a84c]" />
             <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">
@@ -348,15 +378,15 @@ export default async function CherrywoodTowerPage() {
           </h1>
 
           <p className="anim-tagline text-base text-white/50 font-light leading-relaxed max-w-md mb-3">
-            {cmsData?.hero?.description || "Luxury living in the heart of the city."}
+            {cmsData?.hero?.description}
           </p>
 
-          <div className="anim-location flex items-center gap-2 text-white/40 text-sm mb-12">
+          <div className="anim-location flex items-center gap-2 text-white/40 text-sm pb-8">
             <MapPin className="w-4 h-4 text-[#c9a84c] shrink-0" />
-            <span>{cmsData?.hero?.location || "Saddar, Karachi — Pakistan's Commercial Centre"}</span>
+            <span>{cmsData?.hero?.location}</span>
           </div>
 
-          <div className="anim-ctas flex flex-wrap gap-4 mb-16">
+          <div className="anim-ctas flex flex-wrap gap-4 mb-8">
             <Link href={cmsData?.hero?.cta_url || "#apartments"}
               className="group inline-flex items-center gap-3 bg-[#c9a84c] hover:bg-[#b8973d] text-[#0d1b2e] px-8 py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-colors duration-300">
               {cmsData?.hero?.cta_label || "Explore Units"}
@@ -522,10 +552,30 @@ export default async function CherrywoodTowerPage() {
                         </div>
                       </div>
                       <div className="flex pt-4 border-t border-neutral-100">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-green-50 text-green-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0" />
-                          Available for Booking
-                        </span>
+                        {group.status === 'available' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-green-50 text-green-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0" />
+                            Available for Booking
+                          </span>
+                        )}
+                        {group.status === 'limited' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                            Limited Stock Left
+                          </span>
+                        )}
+                        {group.status === 'booked' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                            Booking Under Process
+                          </span>
+                        )}
+                        {group.status === 'sold' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-neutral-100 text-neutral-500">
+                            <span className="w-1.5 h-1.5 rounded-full bg-neutral-400 shrink-0" />
+                            Sold Out
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

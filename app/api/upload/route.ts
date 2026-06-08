@@ -87,7 +87,14 @@ export async function POST(request: NextRequest) {
             const folderName = formData.get('name') as string;
             if (!folderName) return NextResponse.json({ error: 'Folder name is required' }, { status: 400 });
             
-            const newFolderPath = path.join(process.cwd(), 'public', 'uploads', uploadPath, folderName);
+            const baseUploadDir = path.join(process.cwd(), 'public', 'uploads');
+            const newFolderPath = path.join(baseUploadDir, uploadPath, folderName);
+            
+            // Safety check: Ensure newFolderPath is within baseUploadDir
+            if (!newFolderPath.startsWith(baseUploadDir)) {
+                return NextResponse.json({ error: 'Invalid folder path' }, { status: 400 });
+            }
+
             await mkdir(newFolderPath, { recursive: true });
             return NextResponse.json({ success: true, name: folderName }, { status: 201 });
         }
@@ -101,15 +108,33 @@ export async function POST(request: NextRequest) {
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
+        // Validate MIME type and extension (Images only)
+        const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+        if (!allowedMimeTypes.includes(file.type)) {
+            return NextResponse.json({ error: 'Only images are allowed' }, { status: 400 });
+        }
+
+        const ext = path.extname(file.name).toLowerCase();
+        const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'];
+        if (!allowedExtensions.includes(ext)) {
+            return NextResponse.json({ error: 'Invalid image extension' }, { status: 400 });
+        }
+
         // Create unique filename
-        const ext = path.extname(file.name);
         const baseName = path.basename(file.name, ext)
             .replace(/[^a-zA-Z0-9-_]/g, '-')
             .toLowerCase();
         const uniqueName = `${baseName}-${Date.now()}${ext}`;
 
         // Ensure uploads directory exists with the specified path
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads', uploadPath);
+        const baseUploadDir = path.join(process.cwd(), 'public', 'uploads');
+        const uploadDir = path.join(baseUploadDir, uploadPath);
+
+        // Safety check: Ensure uploadDir is within baseUploadDir (prevent Path Traversal)
+        if (!uploadDir.startsWith(baseUploadDir)) {
+            return NextResponse.json({ error: 'Invalid upload path' }, { status: 400 });
+        }
+
         await mkdir(uploadDir, { recursive: true });
 
         const filePath = path.join(uploadDir, uniqueName);

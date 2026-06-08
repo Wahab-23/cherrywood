@@ -4,12 +4,12 @@
  * Single source of truth used across admin UI, API guards, and storefront.
  */
 export const COMPULSORY_PAGES: Record<string, { name: string; template: string }> = {
-  home:                    { name: 'Homepage Layout',          template: 'home' },
-  contact:                 { name: 'Contact Directory',        template: 'contact' },
-  careers:                 { name: 'Careers & Positions',      template: 'careers' },
-  terms:                   { name: 'Terms & Conditions Policy', template: 'policy' },
-  privacy:                 { name: 'Privacy Policy Document',  template: 'policy' },
-  journal:                 { name: 'Journal Editorial Feed',   template: 'journal' },
+  home: { name: 'Homepage Layout', template: 'home' },
+  contact: { name: 'Contact Directory', template: 'contact' },
+  careers: { name: 'Careers & Positions', template: 'careers' },
+  terms: { name: 'Terms & Conditions Policy', template: 'policy' },
+  privacy: { name: 'Privacy Policy Document', template: 'policy' },
+  journal: { name: 'Journal Editorial Feed', template: 'journal' },
 }
 
 export const COMPULSORY_SLUGS = Object.keys(COMPULSORY_PAGES)
@@ -19,10 +19,10 @@ export function isCompulsory(slug: string): boolean {
 }
 
 export const TEMPLATE_LABELS: Record<string, string> = {
-  home:    'Homepage',
+  home: 'Homepage',
   contact: 'Contact',
   careers: 'Careers',
-  policy:  'Policy',
+  policy: 'Policy',
   journal: 'Journal',
   default: 'Rich Text',
 }
@@ -102,21 +102,21 @@ export function getInitialTemplateContent(tpl: string): string {
           type: 'Type A',
           label: '3 Bedroom',
           beds: '3 Bedrooms',
-          size: '1,056 – 1,152 Sq.Ft.',
+          size: '1,656 To 1,752 Sq.Ft.',
           layoutImage: '/uploads/homepage/type-a-3-bedroom-1780295250720.png'
         },
         {
           type: 'Type B',
           label: '2 Bedroom (Drawing)',
           beds: '2 Bedrooms + Drawing',
-          size: '950 Sq.Ft.',
+          size: '1,248 To 1,328 Sq.Ft.',
           layoutImage: '/uploads/homepage/type-b-2-bedroom--drawing--1780295255906.png'
         },
         {
           type: 'Type C',
-          label: '2 Bedroom',
+          label: '2 Bedroom + Lounge',
           beds: '2 Bedrooms + Lounge',
-          size: '916 – 1,016 Sq.Ft.',
+          size: '916 To 1,016 Sq.Ft.',
           layoutImage: '/uploads/homepage/type-c-2-bedroom-1780295260924.png'
         }
       ]

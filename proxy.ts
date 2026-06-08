@@ -1,8 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getSession } from "@/lib/auth";
-
-const DASHBOARD_ROLES = new Set(["admin", "editor", "author"]);
-const STOREFRONT_ROLES = new Set(["admin", "editor", "author", "buyer"]);
+import { DASHBOARD_ROLES, STOREFRONT_ROLES } from "@/lib/constants/roles";
 
 function createJsonError(message: string, status: number) {
   return NextResponse.json({ success: false, error: message }, { status });

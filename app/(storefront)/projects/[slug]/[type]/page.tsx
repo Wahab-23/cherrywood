@@ -4,6 +4,7 @@ import { ChevronLeft, BedDouble, Ruler, CheckCircle2 } from 'lucide-react'
 import { ContactForm } from '@/components/storefront/ContactForm'
 import { ImageGalleryLightbox } from '@/components/storefront/lightbox'
 import type { Metadata } from 'next'
+import { prisma } from '@/lib/prisma'
 
 // ─── Type Metadata Registry ────────────────────────────────────────────────────
 type UnitTypeData = {
@@ -27,7 +28,7 @@ const unitTypeRegistry: Record<string, UnitTypeData> = {
       'The Type A residence is our most expansive offering — a three-bedroom sanctuary designed for families who refuse to compromise. Floor-to-ceiling windows pour natural light across open-plan living areas. The closed kitchen features hand-selected onyx surfaces and premium German appliances. A sprawling master suite with an en-suite spa bathroom completes this unmatched residence.',
     beds: 3,
     baths: 2,
-    size: '1,056 – 1,152 Sq.Ft.',
+    size: '1,656 To 1,752 Sq.Ft.',
     layoutImage: '/uploads/homepage/type-a-3-bedroom-1780295250720.png',
     galleryImages: [
       '/uploads/homepage/spacious-lounge.webp',
@@ -54,7 +55,7 @@ const unitTypeRegistry: Record<string, UnitTypeData> = {
       'The Type B residence balances generous living with intelligent design. A private drawing room provides a dedicated entertainment and retreat space separate from the main living area. Two full bedrooms, double-glazed windows, and contemporary bathrooms create a luxuriously liveable home for the discerning family or professional couple.',
     beds: 2,
     baths: 2,
-    size: '950 Sq.Ft.',
+    size: '1,248 To 1,328 Sq.Ft.',
     layoutImage: '/uploads/homepage/type-b-2-bedroom--drawing--1780295255906.png',
     galleryImages: [
       '/uploads/homepage/spacious-lounge.webp',
@@ -75,13 +76,13 @@ const unitTypeRegistry: Record<string, UnitTypeData> = {
     interest: 'type-b',
   },
   'type-c': {
-    label: 'Type C — 2 Bedroom',
+    label: 'Type C — 2 Bedroom + Lounge',
     tagline: 'Elegant Efficiency, Exceptional Value',
     description:
       'The Type C residence is an exercise in spatial refinement. A bright, open-plan central lounge draws the eye from entry to the full-width windows beyond. Two generously proportioned bedrooms, a contemporary bathroom, and a well-appointed kitchen make this an exceptional choice for young professionals and savvy investors seeking premium returns.',
     beds: 2,
     baths: 1,
-    size: '916 – 1,016 Sq.Ft.',
+    size: '916 To 1,016 Sq.Ft.',
     layoutImage: '/uploads/homepage/type-c-2-bedroom-1780295260924.png',
     galleryImages: [
       '/uploads/homepage/spacious-lounge.webp',
@@ -183,6 +184,39 @@ export default async function ApartmentTypePage({ params }: PageProps) {
   const allGallery = [...typeData.galleryImages]
   const projectName = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 
+  const project = await prisma.project.findUnique({
+    where: { slug },
+    include: {
+      units: {
+        orderBy: { unit_number: 'asc' }
+      }
+    }
+  })
+
+  const typeUnits = project?.units.filter((unit) => {
+    const typeSlug = unit.unit_number.toLowerCase().includes('type a')
+      ? 'type-a'
+      : unit.unit_number.toLowerCase().includes('type b')
+        ? 'type-b'
+        : unit.unit_number.toLowerCase().includes('type c')
+          ? 'type-c'
+          : unit.unit_number.toLowerCase().replace(/\s+/g, '-');
+    return typeSlug === type;
+  }) ?? [];
+
+  let overallStatus = 'available';
+  if (typeUnits.length > 0) {
+    if (typeUnits.some(u => u.status === 'available')) {
+      overallStatus = 'available';
+    } else if (typeUnits.some(u => u.status === 'limited')) {
+      overallStatus = 'limited';
+    } else if (typeUnits.some(u => u.status === 'booked')) {
+      overallStatus = 'booked';
+    } else {
+      overallStatus = 'sold';
+    }
+  }
+
   const jsonLd = [
     {
       '@context': 'https://schema.org',
@@ -254,8 +288,30 @@ export default async function ApartmentTypePage({ params }: PageProps) {
                 <span className="text-sm font-semibold">{typeData.size}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse motion-reduce:animate-none inline-block" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-green-400">Available</span>
+                {overallStatus === 'available' && (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse motion-reduce:animate-none inline-block" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-green-400">Available</span>
+                  </>
+                )}
+                {overallStatus === 'limited' && (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse motion-reduce:animate-none inline-block" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Limited Stock Left</span>
+                  </>
+                )}
+                {overallStatus === 'booked' && (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">Booked</span>
+                  </>
+                )}
+                {overallStatus === 'sold' && (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-neutral-400 inline-block" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Sold Out</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -289,6 +345,7 @@ export default async function ApartmentTypePage({ params }: PageProps) {
                   src={typeData.layoutImage}
                   alt={typeData.label}
                   fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-contain"
                 />
               </div>
@@ -342,7 +399,7 @@ export default async function ApartmentTypePage({ params }: PageProps) {
                     className="relative w-full bg-white border border-neutral-100 overflow-hidden cursor-zoom-in group"
                     style={{ aspectRatio: i === 0 ? '16/10' : '4/3' }}
                   >
-                    <Image src={img} alt={typeData.label} fill className="object-cover" />
+                    <Image src={img} alt={typeData.label} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
                   </div>
                 </ImageGalleryLightbox>
               ))}
@@ -374,10 +431,30 @@ export default async function ApartmentTypePage({ params }: PageProps) {
                 ))}
                 <div className="flex items-center justify-between py-2">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Status</span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-green-50 text-green-700">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse motion-reduce:animate-none shrink-0" />
-                    Available
-                  </span>
+                  {overallStatus === 'available' && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-green-50 text-green-700">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse motion-reduce:animate-none shrink-0" />
+                      Available
+                    </span>
+                  )}
+                  {overallStatus === 'limited' && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse motion-reduce:animate-none shrink-0" />
+                      Limited Stock Left
+                    </span>
+                  )}
+                  {overallStatus === 'booked' && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                      Booked
+                    </span>
+                  )}
+                  {overallStatus === 'sold' && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-neutral-100 text-neutral-500">
+                      <span className="w-1.5 h-1.5 rounded-full bg-neutral-400 shrink-0" />
+                      Sold Out
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

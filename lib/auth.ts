@@ -12,7 +12,7 @@ export interface JWTPayload {
     roleId: string;
     roleName: string;
     isVerified: boolean;
-    access: any;
+    access: Record<string, any>;
 }
 
 export function signToken(payload: JWTPayload): string {

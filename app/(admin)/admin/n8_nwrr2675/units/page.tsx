@@ -7,17 +7,17 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useRouter } from 'next/navigation'
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Box, 
-  Building, 
-  MapPin, 
-  User, 
-  DollarSign, 
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Eye,
+  Box,
+  Building,
+  MapPin,
+  User,
+  DollarSign,
   Layers,
   CheckCircle,
   Clock,
@@ -32,7 +32,7 @@ export default function UnitsPage() {
   const [projectFilter, setProjectFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
-  
+
   const [projects, setProjects] = useState<any[]>([])
   const [units, setUnits] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -194,6 +194,7 @@ export default function UnitsPage() {
         >
           <option value="">All Statuses</option>
           <option value="available">Available</option>
+          <option value="limited">Limited</option>
           <option value="booked">Booked</option>
           <option value="sold">Sold</option>
         </select>
@@ -305,27 +306,27 @@ export default function UnitsPage() {
                     {/* Actions */}
                     <TableCell className="px-8 py-4.5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => router.push(`/admin/n8_nwrr2675/projects/${unit.project?.id}?tab=units`)}
                           className="w-8 h-8 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
                           title="View In Project context"
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => router.push(`/admin/n8_nwrr2675/units/${unit.id}/edit`)}
                           className="w-8 h-8 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
                           title="Edit Unit details"
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => setUnitToDelete(unit)}
                           className="w-8 h-8 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
                           title="Delete Unit"

@@ -5,6 +5,7 @@ import { signToken } from "@/lib/auth";
 import { z } from "zod";
 
 import { authenticator } from "otplib";
+import { rateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
     email: z.string().email(),
@@ -14,6 +15,16 @@ const schema = z.object({
 
 export async function POST(request: NextRequest) {
     try {
+        const ip = request.headers.get("x-forwarded-for") || "unknown";
+        const rateLimitResult = rateLimit(ip, { limit: 5, windowMs: 15 * 60 * 1000 }); // 5 attempts per 15 min
+
+        if (!rateLimitResult.success) {
+            return NextResponse.json(
+                { success: false, error: "Too many login attempts. Please try again later." },
+                { status: 429 }
+            );
+        }
+
         const parsed = schema.safeParse(await request.json());
         if (!parsed.success) {
             return NextResponse.json(
@@ -76,7 +87,7 @@ export async function POST(request: NextRequest) {
             roleId: user.role_id,
             roleName: user.role.name,
             isVerified: user.is_verified ?? false,
-            access: user.role.access || {},
+            access: (user.role.access as Record<string, any>) || {},
         });
 
         const safeUser = {
@@ -88,7 +99,7 @@ export async function POST(request: NextRequest) {
             status: user.status,
             profile_image: user.profile_image,
             two_factor_enabled: user.two_factor_enabled,
-            access: user.role.access || {},
+            access: (user.role.access as Record<string, any>) || {},
         };
 
         const response = NextResponse.json({ success: true, user: safeUser });

@@ -264,6 +264,7 @@ export default function EditUnitPage() {
                     className="w-full px-3.5 h-11 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
                   >
                     <option value="available">Available (Open for offers)</option>
+                    <option value="limited">Limited Stock Left (Confirmation Required)</option>
                     <option value="booked">Booked (Under processing)</option>
                     <option value="sold">Sold (Contract signed)</option>
                   </select>

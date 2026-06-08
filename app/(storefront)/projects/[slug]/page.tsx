@@ -277,8 +277,15 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
                     if (!uniqueTypesMap.has(typeSlug)) {
                       uniqueTypesMap.set(typeSlug, { ...unit, _typeSlug: typeSlug });
-                    } else if (unit.status === 'available') {
-                      uniqueTypesMap.get(typeSlug).status = 'available';
+                    } else {
+                      const currentStatus = uniqueTypesMap.get(typeSlug).status;
+                      if (unit.status === 'available') {
+                        uniqueTypesMap.get(typeSlug).status = 'available';
+                      } else if (unit.status === 'limited' && currentStatus !== 'available') {
+                        uniqueTypesMap.get(typeSlug).status = 'limited';
+                      } else if (unit.status === 'booked' && currentStatus !== 'available' && currentStatus !== 'limited') {
+                        uniqueTypesMap.get(typeSlug).status = 'booked';
+                      }
                     }
                   });
 
@@ -297,9 +304,26 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                               }
                             </h4>
                           </div>
-                          <span className={`text-[9px] font-bold px-2.5 py-1 uppercase tracking-wider ${unit.status === 'available' ? 'bg-green-50 text-green-700' : 'bg-neutral-100 text-neutral-500'}`}>
-                            {unit.status === 'available' ? 'Available' : 'Not Available'}
-                          </span>
+                          {unit.status === 'available' && (
+                            <span className="text-[9px] font-bold px-2.5 py-1 uppercase tracking-wider bg-green-50 text-green-700">
+                              Available
+                            </span>
+                          )}
+                          {unit.status === 'limited' && (
+                            <span className="text-[9px] font-bold px-2.5 py-1 uppercase tracking-wider bg-amber-50 text-amber-700">
+                              Limited Stock Left
+                            </span>
+                          )}
+                          {unit.status === 'booked' && (
+                            <span className="text-[9px] font-bold px-2.5 py-1 uppercase tracking-wider bg-blue-50 text-blue-700">
+                              Booked
+                            </span>
+                          )}
+                          {unit.status === 'sold' && (
+                            <span className="text-[9px] font-bold px-2.5 py-1 uppercase tracking-wider bg-neutral-100 text-neutral-500">
+                              Sold Out
+                            </span>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-4 text-sm text-neutral-500 mb-6">

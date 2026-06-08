@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
                 status: user.status,
                 profile_image: user.profile_image,
                 two_factor_enabled: user.two_factor_enabled,
-                access: user.role.access || {},
+                access: (user.role.access as Record<string, any>) || {},
             },
         });
     } catch (error) {
