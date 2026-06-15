@@ -51,9 +51,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        if (user.status === "suspended") {
+        if (user.status === "suspended" || user.status === "deleted") {
             return NextResponse.json(
-                { success: false, error: "Account suspended" },
+                { success: false, error: "Account suspended or deleted" },
                 { status: 403 }
             );
         }

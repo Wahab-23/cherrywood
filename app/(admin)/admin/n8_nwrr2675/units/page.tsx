@@ -214,11 +214,9 @@ export default function UnitsPage() {
               <TableRow className="border-none">
                 <TableHead className="px-8 py-4 font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px]">Unit #</TableHead>
                 <TableHead className="py-4 font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px]">Associated Project</TableHead>
-                <TableHead className="py-4 font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px]">Floor / Sizing</TableHead>
+                <TableHead className="py-4 font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px]">Sizing</TableHead>
                 <TableHead className="py-4 font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px]">Type</TableHead>
-                <TableHead className="py-4 font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px]">Pricing</TableHead>
                 <TableHead className="py-4 font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px]">Status</TableHead>
-                <TableHead className="py-4 font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px]">Assigned Owner</TableHead>
                 <TableHead className="px-8 py-4 font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -254,8 +252,6 @@ export default function UnitsPage() {
 
                     {/* Floor & Size */}
                     <TableCell className="py-4.5 text-[13px] font-semibold text-slate-700 dark:text-slate-300">
-                      <span>{unit.floor || 'N/A'} floor</span>
-                      <span className="text-slate-300 dark:text-slate-700 mx-1.5">•</span>
                       <span><strong>{unit.size_sqft || 'N/A'}</strong> sqft</span>
                     </TableCell>
 
@@ -264,11 +260,6 @@ export default function UnitsPage() {
                       <Badge variant="outline" className="rounded-lg bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/50 font-black uppercase text-[9px] px-2 py-0.5">
                         {unit.type || 'apartment'}
                       </Badge>
-                    </TableCell>
-
-                    {/* Price */}
-                    <TableCell className="py-4.5 font-bold text-slate-950 dark:text-slate-100 text-[14px]">
-                      {formatPrice(unit.price)}
                     </TableCell>
 
                     {/* Status Badge */}
@@ -283,38 +274,27 @@ export default function UnitsPage() {
                           <Clock className="w-3.5 h-3.5" />
                           Booked
                         </span>
-                      ) : (
+                      ) : unit.status === 'sold' ? (
                         <span className="flex items-center gap-1.5 text-red-500 dark:text-red-400 font-bold text-[10px] uppercase tracking-wider">
                           <AlertCircle className="w-3.5 h-3.5" />
                           Sold
                         </span>
-                      )}
-                    </TableCell>
-
-                    {/* Owner */}
-                    <TableCell className="py-4.5">
-                      {unit.owner ? (
-                        <div className="flex items-center gap-1.5">
-                          <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span className="text-[13px] font-bold text-slate-800 dark:text-slate-200">{unit.owner.name}</span>
-                        </div>
+                      ) : unit.status === 'limited' ? (
+                        <span className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-500 font-bold text-[10px] uppercase tracking-wider">
+                          <Clock className="w-3.5 h-3.5" />
+                          Limited
+                        </span>
                       ) : (
-                        <span className="text-xs text-slate-400 font-semibold">—</span>
+                        <span className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 font-bold text-[10px] uppercase tracking-wider">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          Unknown
+                        </span>
                       )}
                     </TableCell>
 
                     {/* Actions */}
                     <TableCell className="px-8 py-4.5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => router.push(`/admin/n8_nwrr2675/projects/${unit.project?.id}?tab=units`)}
-                          className="w-8 h-8 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                          title="View In Project context"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"

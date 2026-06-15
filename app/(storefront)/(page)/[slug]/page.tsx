@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (slug === 'home') {
     redirect('/')
   }
-  
+
   const record = await prisma.page.findUnique({ where: { slug } })
   if (!record) return {}
 
@@ -54,7 +54,7 @@ export async function generateStaticParams() {
 
 export default async function StorefrontPage({ params }: PageProps) {
   const { slug } = await params
-  
+
   if (slug === 'home') {
     redirect('/')
   }
@@ -336,8 +336,8 @@ export default async function StorefrontPage({ params }: PageProps) {
             <div className="space-y-10">
               {(data.sections || []).map((sec: any, i: number) => (
                 <div key={i} className="space-y-3">
-                  <h3 className="text-lg font-serif text-[#0d1b2e] font-bold">{sec.title}</h3>
-                  <div 
+                  <h2 className="text-2xl font-serif text-[#0d1b2e] font-bold">{sec.title}</h2>
+                  <div
                     className="text-sm text-slate-600 font-semibold leading-relaxed prose prose-sm prose-slate max-w-none prose-p:my-1"
                     dangerouslySetInnerHTML={{ __html: sec.content }}
                   />

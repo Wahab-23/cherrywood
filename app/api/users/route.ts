@@ -13,12 +13,13 @@ export async function GET(request: NextRequest) {
         const search = request.nextUrl.searchParams.get("search") || "";
         const skip = (page - 1) * limit;
 
-        const whereClause = search ? {
+        const whereClause: any = search ? {
             OR: [
                 { name: { contains: search } },
                 { email: { contains: search } }
-            ]
-        } : {};
+            ],
+            status: { not: 'deleted' }
+        } : { status: { not: 'deleted' } };
 
         const users = await prisma.user.findMany({
             where: whereClause,

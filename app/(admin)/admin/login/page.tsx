@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { setStoredUser } from '@/lib/auth-context'
 import { AlertCircle, LogIn } from 'lucide-react'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -172,9 +173,7 @@ export default function LoginPage() {
 
             {!requires2FA && (
               <div className="text-center text-sm text-slate-600 space-y-2 pt-2">
-                <p>Demo Credentials:</p>
-                <p>Email: <span className="font-mono text-xs">admin@cherrywood.com</span></p>
-                <p>Password: <span className="font-mono text-xs">password123</span></p>
+                <p>Forgot your password? <Link href="/admin/forgot-password" className="text-slate-600 hover:text-slate-800">Reset Password</Link></p>
               </div>
             )}
           </form>

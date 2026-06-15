@@ -155,9 +155,14 @@ export async function DELETE(
     if ("error" in authResult) return authResult.error;
     try {
         const { id } = await params;
+        
+        // Delete related tags first to prevent foreign key constraint failures
+        await prisma.blogTag.deleteMany({ where: { blog_id: id } });
+        
         const blog = await prisma.blog.delete({ where: { id } });
         return NextResponse.json(blog);
-    } catch (error) {
-        return NextResponse.json({ error }, { status: 500 });
+    } catch (error: any) {
+        console.error("[DELETE /api/blogs/[id]] Error:", error);
+        return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
     }
 }

@@ -13,6 +13,14 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import ImageUpload from '@/components/admin/MultiImageUpload'
 import { toast } from 'sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export default function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -32,6 +40,10 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false)
+  const [pendingAction, setPendingAction] = useState<'update' | 'delete' | null>(null)
 
   useEffect(() => {
     fetchInitialData()
@@ -70,33 +82,44 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
     }
   }
 
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const executeUpdate = async (passwordForAuth?: string) => {
     setSaving(true)
     setError('')
 
     try {
+      const payload: any = {
+        name,
+        email,
+        role_id: roleId,
+        bio,
+        profile_image: profileImage,
+        status,
+      }
+      if (password) payload.password = password
+      if (passwordForAuth) payload.currentPassword = passwordForAuth
+
       const response = await fetch(`/api/users/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name,
-          email,
-          role_id: roleId,
-          bio,
-          profile_image: profileImage,
-          status,
-          ...(password ? { password } : {})
-        })
+        body: JSON.stringify(payload)
       })
 
       const data = await response.json()
-      if (!response.ok) throw new Error(data.error || 'Failed to update user')
+      if (!response.ok) {
+         if (response.status === 400 && data.error?.includes('Current password is required')) {
+            setPendingAction('update')
+            setShowPasswordDialog(true)
+            return
+         }
+         throw new Error(data.error || 'Failed to update user')
+      }
 
       toast.success('User updated successfully')
       setPassword('')
+      setShowPasswordDialog(false)
+      setCurrentPassword('')
     } catch (err: any) {
       toast.error(err.message)
       setError(err.message)
@@ -105,16 +128,51 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
     }
   }
 
-  const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this user?")) return
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    executeUpdate()
+  }
+
+  const executeDelete = async (passwordForAuth?: string) => {
     try {
-      const response = await fetch(`/api/users/${id}`, { method: 'DELETE' })
+      const payload: any = {}
+      if (passwordForAuth) payload.currentPassword = passwordForAuth
+      
+      const response = await fetch(`/api/users/${id}`, { 
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+      })
       const data = await response.json()
-      if (!response.ok) throw new Error(data.error || 'Failed to delete user')
+      if (!response.ok) {
+         if (response.status === 400 && data.error?.includes('Current password is required')) {
+            setPendingAction('delete')
+            setShowPasswordDialog(true)
+            return
+         }
+         throw new Error(data.error || 'Failed to delete user')
+      }
       toast.success('User deleted successfully')
       router.push('/admin/n8_nwrr2675/users/list')
     } catch (err: any) {
       toast.error(err.message)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this user?")) return
+    executeDelete()
+  }
+
+  const handlePasswordConfirm = () => {
+    if (!currentPassword) {
+      toast.error("Please enter your password")
+      return
+    }
+    if (pendingAction === 'update') {
+      executeUpdate(currentPassword)
+    } else if (pendingAction === 'delete') {
+      executeDelete(currentPassword)
     }
   }
 
@@ -325,6 +383,48 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
           </form>
         </div>
       </div>
+
+      <Dialog open={showPasswordDialog} onOpenChange={(open) => {
+        setShowPasswordDialog(open)
+        if (!open) {
+          setCurrentPassword('')
+          setPendingAction(null)
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Admin Verification Required</DialogTitle>
+            <DialogDescription>
+              Please enter your current admin password to confirm this action.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="admin-password">Your Password</Label>
+              <Input
+                id="admin-password"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter your password"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handlePasswordConfirm()
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPasswordDialog(false)}>Cancel</Button>
+            <Button onClick={handlePasswordConfirm} disabled={saving}>
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Confirm Action
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
