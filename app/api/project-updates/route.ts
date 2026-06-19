@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     try {
         const body = await request.json();
-        const { project_id, title, description, progress_percentage, visibility, images } = body;
+        const { project_id, title, description, progress_percentage, visibility, images, video_url } = body;
 
         if (!project_id) {
             return NextResponse.json({ success: false, error: "project_id is required" }, { status: 400 });
@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
                 description,
                 progress_percentage: progress_percentage ? Number(progress_percentage) : null,
                 visibility: visibility || "public",
+                video_url: video_url || null,
                 created_by: userId,
                 images: images && Array.isArray(images) ? {
                     create: images.map((url: string) => ({

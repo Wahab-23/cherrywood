@@ -429,78 +429,8 @@ export default async function CherrywoodTowerPage() {
         </div>
       </div>
 
-      {/* 3. LOCATION */}
-      <section className="py-28 md:py-36 bg-white">
-        <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
-
-            <div className="reveal-left lg:col-span-5 space-y-6">
-              <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Location</span>
-              <h2 className="text-4xl md:text-5xl font-black text-[#0d1b2e] leading-tight">
-                {cmsData?.location?.title || "Saddar —"}<br />
-                <span className="font-light italic">{cmsData?.location?.italic_title || "An Enviable Address"}</span>
-              </h2>
-              <div className="gold-line" />
-              <p className="text-sm text-neutral-500 font-light leading-relaxed">
-                {cmsData?.location?.description || "Karachi's commercial and cultural epicentre. Saddar places you moments from premier medical centres, top-class schools and colleges, and every necessity of modern life — while positioning your investment in one of the city's most sought-after addresses."}
-              </p>
-              <div className="flex items-start gap-3 pt-4">
-                <MapPin className="w-5 h-5 text-[#c9a84c] mt-0.5 shrink-0" />
-                <p className="text-sm font-semibold text-[#0d1b2e]">
-                  {cmsData?.location?.address || "Plot No. 125 Katrak Road, Depot Lines, Saddar, Karachi — 74200, Pakistan"}
-                </p>
-              </div>
-            </div>
-
-            <div className="reveal-right lg:col-span-7">
-              <div className="grid grid-cols-2 gap-3 stagger">
-                {(cmsData?.location?.landmarks || [
-                  { label: 'Karachi Lighthouse', dist: '0.3 km' },
-                  { label: 'Empress Market', dist: '0.6 km' },
-                  { label: 'Avari Towers', dist: '0.8 km' },
-                  { label: "Jinnah's Mausoleum", dist: '1.2 km' },
-                  { label: 'National Museum', dist: '0.9 km' },
-                  { label: 'Burns Road', dist: '0.5 km' },
-                  { label: 'Rainbow Centre', dist: '0.4 km' },
-                  { label: 'Garden West', dist: '0.7 km' },
-                ]).map((loc: any) => (
-                  <div key={loc.label}
-                    className="reveal flex items-center justify-between p-4 border border-neutral-100 bg-[#fcfbf8] hover:border-[#c9a84c]/40 hover:bg-white transition-all duration-300">
-                    <span className="text-sm font-semibold text-[#0d1b2e]">{loc.label}</span>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#c9a84c]">{loc.dist}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* 4. THE TOWER */}
-      <section id="tower" className="relative py-28 md:py-36 bg-[#0d1b2e] text-white overflow-hidden">
-        <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-end mb-20">
-            <div className="reveal-left lg:col-span-7 space-y-6">
-              <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">The Development</span>
-              <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
-                {cmsData?.development?.title || "Modern Luxury"}<br />
-                <span className="font-light italic">{cmsData?.development?.italic_title || "at the Centre of the City"}</span>
-              </h2>
-            </div>
-            <div className="reveal-right lg:col-span-5">
-              <p className="text-sm text-white/50 font-light leading-relaxed">
-                {cmsData?.development?.description || "Cherrywood Tower is the perfect combination of sophistication and convenience. Elegantly styled with one of the best architectural designs, it houses premium residences above a grand lobby, wide hallways, and high-speed lifts — with double-height luxury retail shops at street level."}
-              </p>
-            </div>
-          </div>
-
-          <TowerFeatures features={cmsData?.development?.features} />
-        </div>
-      </section>
-
       {/* 5. APARTMENTS */}
-      <section id="apartments" className="relative py-28 md:py-36 bg-[#f7f5f0] overflow-hidden">
+      <section id="apartments" className="relative py-28 md:py-36 bg-white overflow-hidden">
         <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
             <div className="reveal space-y-4">
@@ -594,6 +524,29 @@ export default async function CherrywoodTowerPage() {
         </div>
       </section>
 
+      {/* 4. THE TOWER */}
+      <section id="tower" className="relative py-28 md:py-36 bg-[#0d1b2e] text-white overflow-hidden">
+        <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-end mb-20">
+            <div className="reveal-left lg:col-span-7 space-y-6">
+              <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">The Development</span>
+              <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
+                {cmsData?.development?.title || "Modern Luxury"}<br />
+                <span className="font-light italic">{cmsData?.development?.italic_title || "at the Centre of the City"}</span>
+              </h2>
+            </div>
+            <div className="reveal-right lg:col-span-5">
+              <p className="text-sm text-white/50 font-light leading-relaxed">
+                {
+                  cmsData?.development?.description || "Cherrywood Tower is the perfect combination of sophistication and convenience. Elegantly styled with one of the best architectural designs, it houses premium residences above a grand lobby, wide hallways, and high-speed lifts — with double-height luxury retail shops at street level."}
+              </p>
+            </div>
+          </div>
+
+          <TowerFeatures features={cmsData?.development?.features} />
+        </div>
+      </section>
+
       {/* 6. RETAIL SHOPS */}
       <section className="py-28 md:py-36 bg-white">
         <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
@@ -650,6 +603,54 @@ export default async function CherrywoodTowerPage() {
                   <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#c9a84c]">Wide Shopping Corridors</p>
                   <p className="text-white/70 text-sm mt-1">Spacious walkways lined with classy double-height shops on both sides.</p>
                 </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* 3. LOCATION */}
+      <section className="py-28 md:py-36 bg-[#f7f5f0]">
+        <div className="relative z-20 w-full max-w-[1536px] mx-auto px-6 md:px-12 lg:px-20 xl:px-28">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
+
+            <div className="reveal-left lg:col-span-5 space-y-6">
+              <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#c9a84c]">Location</span>
+              <h2 className="text-4xl md:text-5xl font-black text-[#0d1b2e] leading-tight">
+                {cmsData?.location?.title || "Saddar —"}<br />
+                <span className="font-light italic">{cmsData?.location?.italic_title || "An Enviable Address"}</span>
+              </h2>
+              <div className="gold-line" />
+              <p className="text-sm text-neutral-500 font-light leading-relaxed">
+                {cmsData?.location?.description || "Karachi's commercial and cultural epicentre. Saddar places you moments from premier medical centres, top-class schools and colleges, and every necessity of modern life — while positioning your investment in one of the city's most sought-after addresses."}
+              </p>
+              <div className="flex items-start gap-3 pt-4">
+                <MapPin className="w-5 h-5 text-[#c9a84c] mt-0.5 shrink-0" />
+                <p className="text-sm font-semibold text-[#0d1b2e]">
+                  {cmsData?.location?.address || "Plot No. 125 Katrak Road, Depot Lines, Saddar, Karachi — 74200, Pakistan"}
+                </p>
+              </div>
+            </div>
+
+            <div className="reveal-right lg:col-span-7">
+              <div className="grid grid-cols-2 gap-3 stagger">
+                {(cmsData?.location?.landmarks || [
+                  { label: 'Karachi Lighthouse', dist: '0.3 km' },
+                  { label: 'Empress Market', dist: '0.6 km' },
+                  { label: 'Avari Towers', dist: '0.8 km' },
+                  { label: "Jinnah's Mausoleum", dist: '1.2 km' },
+                  { label: 'National Museum', dist: '0.9 km' },
+                  { label: 'Burns Road', dist: '0.5 km' },
+                  { label: 'Rainbow Centre', dist: '0.4 km' },
+                  { label: 'Garden West', dist: '0.7 km' },
+                ]).map((loc: any) => (
+                  <div key={loc.label}
+                    className="reveal flex items-center justify-between p-4 border border-neutral-100 bg-[#fcfbf8] hover:border-[#c9a84c]/40 hover:bg-white transition-all duration-300">
+                    <span className="text-sm font-semibold text-[#0d1b2e]">{loc.label}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#c9a84c]">{loc.dist}</span>
+                  </div>
+                ))}
               </div>
             </div>
 

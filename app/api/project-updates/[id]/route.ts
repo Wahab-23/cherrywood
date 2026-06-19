@@ -13,17 +13,18 @@ export async function PUT(
     try {
         const { id } = await params;
         const body = await request.json();
-        const { title, description, progress_percentage, visibility, images } = body;
+        const { title, description, progress_percentage, visibility, images, video_url } = body;
 
         const data: any = {};
         if (title !== undefined) data.title = title;
         if (description !== undefined) data.description = description;
         if (progress_percentage !== undefined) {
-            data.progress_percentage = progress_percentage !== null && progress_percentage !== "" 
-                ? Number(progress_percentage) 
+            data.progress_percentage = progress_percentage !== null && progress_percentage !== ""
+                ? Number(progress_percentage)
                 : null;
         }
         if (visibility !== undefined) data.visibility = visibility;
+        if (video_url !== undefined) data.video_url = video_url || null;
 
         // If images are specified, replace the existing gallery images
         if (images && Array.isArray(images)) {

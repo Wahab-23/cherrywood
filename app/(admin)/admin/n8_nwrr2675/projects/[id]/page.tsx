@@ -31,7 +31,8 @@ import {
   Shield,
   Sparkles,
   Sliders,
-  DollarSign
+  DollarSign,
+  Video
 } from 'lucide-react'
 import { toast } from 'sonner'
 import ImageUpload from '@/components/admin/MultiImageUpload'
@@ -80,6 +81,7 @@ export default function ProjectDashboardPage() {
   const [updatePercentage, setUpdatePercentage] = useState('')
   const [updateVisibility, setUpdateVisibility] = useState('public')
   const [updateImages, setUpdateImages] = useState<string[]>([])
+  const [updateVideoUrl, setUpdateVideoUrl] = useState('')
   const [savingUpdate, setSavingUpdate] = useState(false)
 
   // ─── Initial Loading ────────────────────────────────────────────────────────
@@ -249,6 +251,7 @@ export default function ProjectDashboardPage() {
     setUpdatePercentage('')
     setUpdateVisibility('public')
     setUpdateImages([])
+    setUpdateVideoUrl('')
     setUpdateModalOpen(true)
   }
 
@@ -259,6 +262,7 @@ export default function ProjectDashboardPage() {
     setUpdatePercentage(upd.progress_percentage ? String(upd.progress_percentage) : '')
     setUpdateVisibility(upd.visibility || 'public')
     setUpdateImages(upd.images ? upd.images.map((img: any) => img.image_url) : [])
+    setUpdateVideoUrl(upd.video_url || '')
     setUpdateModalOpen(true)
   }
 
@@ -278,6 +282,7 @@ export default function ProjectDashboardPage() {
         progress_percentage: updatePercentage ? Number(updatePercentage) : null,
         visibility: updateVisibility,
         images: updateImages,
+        video_url: updateVideoUrl || null,
       }
 
       let res, data
@@ -763,8 +768,6 @@ export default function ProjectDashboardPage() {
         </TabsContent>
       </Tabs>
 
-
-
       {/* ─── MODAL DIALOG: DELETE UNIT CONFIRM ─────────────────────────────── */}
       <Dialog open={!!unitToDelete} onOpenChange={(open) => !open && setUnitToDelete(null)}>
         <DialogContent className="max-w-md rounded-2xl">
@@ -819,8 +822,24 @@ export default function ProjectDashboardPage() {
                 </div>
               </div>
 
+              {/* Video URL */}
+              <div className="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-4">
+                <Label htmlFor="updVideo" className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Video className="w-3.5 h-3.5" /> Video URL (optional)
+                </Label>
+                <Input
+                  id="updVideo"
+                  type="url"
+                  placeholder="e.g. https://www.youtube.com/watch?v=... or https://vimeo.com/..."
+                  value={updateVideoUrl}
+                  onChange={(e) => setUpdateVideoUrl(e.target.value)}
+                  className="rounded-xl font-mono text-xs"
+                />
+                <p className="text-[11px] text-slate-400 font-semibold">Paste a YouTube, Vimeo, or direct video URL to embed it in this update.</p>
+              </div>
+
               {/* Progress Images */}
-              <div className="space-y-2 border-t border-slate-100 dark:border-slate-800 pt-4">
+              <div className="space-y-2 pt-4">
                 <ImageUpload
                   mode="multi"
                   value={updateImages}

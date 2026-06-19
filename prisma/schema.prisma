@@ -108,7 +108,8 @@ model ProjectUpdate {
   creator             User     @relation(fields: [created_by], references: [id])
   created_at          DateTime @default(now())
 
-  images ProjectUpdateImage[]
+  video_url String?
+  images    ProjectUpdateImage[]
 
   @@map("project_updates")
 }

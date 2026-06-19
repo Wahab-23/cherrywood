@@ -15,6 +15,34 @@ import {
 } from 'lucide-react'
 import { ImageGalleryLightbox } from '@/components/storefront/lightbox'
 
+/**
+ * Converts a public video URL into a safe embeddable URL.
+ * Supports YouTube (watch / short / youtu.be), Vimeo, and direct video files.
+ */
+function getEmbedUrl(url: string): { type: 'iframe' | 'video'; src: string } | null {
+  if (!url) return null
+  try {
+    const u = new URL(url)
+    // YouTube
+    const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/)
+    if (ytMatch) {
+      return { type: 'iframe', src: `https://www.youtube.com/embed/${ytMatch[1]}?rel=0` }
+    }
+    // Vimeo
+    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+    if (vimeoMatch) {
+      return { type: 'iframe', src: `https://player.vimeo.com/video/${vimeoMatch[1]}` }
+    }
+    // Direct video file
+    if (/\.(mp4|webm|ogg|mov)$/i.test(u.pathname)) {
+      return { type: 'video', src: url }
+    }
+  } catch {
+    // invalid URL – ignore
+  }
+  return null
+}
+
 interface PageProps {
   params: Promise<{ slug: string }>
 }
@@ -215,6 +243,35 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                     </div>
                     <h3 className="font-display text-lg text-[#0d1b2e]">{update.title}</h3>
                     <p className="text-sm text-neutral-500 font-light leading-relaxed line-clamp-3">{update.description}</p>
+
+                    {/* Video embed */}
+                    {update.video_url && (() => {
+                      const embed = getEmbedUrl(update.video_url)
+                      if (!embed) return null
+                      return (
+                        <div className="pt-3">
+                          <div className="relative w-full overflow-hidden bg-black" style={{ paddingBottom: '56.25%' }}>
+                            {embed.type === 'iframe' ? (
+                              <iframe
+                                src={embed.src}
+                                title="Development progress video"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                className="absolute inset-0 w-full h-full border-0"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <video
+                                src={embed.src}
+                                controls
+                                preload="metadata"
+                                className="absolute inset-0 w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })()}
 
                     {update.images.length > 0 && (
                       <div className="grid grid-cols-3 gap-2 pt-2">

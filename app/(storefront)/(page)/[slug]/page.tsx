@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { Mail, Phone, Clock, MapPin, Briefcase, Heart, Shield, Scale, ArrowRight, Calendar, Sparkles, Compass, Hammer } from 'lucide-react'
 import BlockNoteRenderer from "@/components/blocknote/BlockNoteRenderer";
 import { ContactForm } from '@/components/storefront/ContactForm'
+import Link from 'next/link';
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -399,13 +400,13 @@ export default async function StorefrontPage({ params }: PageProps) {
                     <span className="text-[10px] bg-slate-50 px-2 py-0.5 rounded text-slate-600 font-bold uppercase tracking-wider">
                       {article.category || 'Architecture'}
                     </span>
-                    <a
+                    <Link
                       href={`/journal/${article.slug}`}
                       className="text-xs font-bold uppercase tracking-wider flex items-center gap-1 hover:gap-2 transition-all"
                       style={{ color: data.theme_color || '#0d1b2e' }}
                     >
                       Read Article <ArrowRight className="w-3 h-3" />
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>
