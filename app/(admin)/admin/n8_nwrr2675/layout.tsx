@@ -16,7 +16,8 @@ import {
   ChevronRight,
   Bell,
   Image as ImageIcon,
-  Mail
+  Mail,
+  Database
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -126,6 +127,7 @@ function AdminLayoutContent({
 
   const secondaryNavItems = [
     { href: '/admin/n8_nwrr2675/profile', label: 'My Profile', icon: UserCircle },
+    { href: '/admin/n8_nwrr2675/cache', label: 'Cache & State', icon: Database },
     { href: '/admin/n8_nwrr2675/settings', label: 'Settings', icon: Settings },
   ]
 
