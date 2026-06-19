@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/guards";
+import { revalidatePath } from "next/cache";
 
 export async function GET(request: NextRequest) {
     try {
@@ -99,6 +100,14 @@ export async function POST(request: NextRequest) {
         }
 
         const project = await prisma.project.create({ data });
+
+        // Revalidate storefront pages displaying projects
+        revalidatePath("/");
+        revalidatePath("/projects");
+        if (project.slug) {
+            revalidatePath(`/projects/${project.slug}`);
+        }
+
         return NextResponse.json({ success: true, data: project }, { status: 201 });
     } catch (error: any) {
         return NextResponse.json({

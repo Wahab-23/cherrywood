@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/guards";
+import { revalidatePath } from "next/cache";
 
 interface Filter {
     search?: string;
@@ -98,10 +99,22 @@ export async function POST(request: NextRequest) {
                 size_sqft: data.size_sqft ? Number(data.size_sqft) : undefined,
             },
             include: {
-                project: true,
+                project: {
+                    select: {
+                        slug: true
+                    }
+                },
                 owner: true,
             },
         });
+
+        // Revalidate storefront pages displaying units
+        revalidatePath("/");
+        revalidatePath("/projects");
+        if (unit.project?.slug) {
+            revalidatePath(`/projects/${unit.project.slug}`);
+        }
+
         return NextResponse.json({
             success: true,
             data: unit,

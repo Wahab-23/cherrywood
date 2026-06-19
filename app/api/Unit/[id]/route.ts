@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/guards";
+import { revalidatePath } from "next/cache";
 
 export async function GET(
     request: NextRequest,
@@ -48,7 +49,22 @@ export async function PUT(
         const unit = await prisma.unit.update({
             where: { id },
             data: updateData,
+            include: {
+                project: {
+                    select: {
+                        slug: true
+                    }
+                }
+            }
         });
+
+        // Revalidate storefront pages displaying units
+        revalidatePath("/");
+        revalidatePath("/projects");
+        if (unit.project?.slug) {
+            revalidatePath(`/projects/${unit.project.slug}`);
+        }
+
         return NextResponse.json({ success: true, data: unit });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -64,7 +80,24 @@ export async function DELETE(
 
     try {
         const { id } = await params;
-        const unit = await prisma.unit.delete({ where: { id } });
+        const unit = await prisma.unit.delete({
+            where: { id },
+            include: {
+                project: {
+                    select: {
+                        slug: true
+                    }
+                }
+            }
+        });
+
+        // Revalidate storefront pages displaying units
+        revalidatePath("/");
+        revalidatePath("/projects");
+        if (unit.project?.slug) {
+            revalidatePath(`/projects/${unit.project.slug}`);
+        }
+
         return NextResponse.json({ success: true, data: unit });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });

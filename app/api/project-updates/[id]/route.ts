@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/guards";
+import { revalidatePath } from "next/cache";
 
 // PUT edit progress update
 export async function PUT(
@@ -53,8 +54,20 @@ export async function PUT(
                     }
                 },
                 images: true,
+                project: {
+                    select: {
+                        slug: true
+                    }
+                }
             }
         });
+
+        // Revalidate storefront pages displaying updates
+        revalidatePath("/");
+        revalidatePath("/projects");
+        if (update.project?.slug) {
+            revalidatePath(`/projects/${update.project.slug}`);
+        }
 
         return NextResponse.json({ success: true, data: update });
     } catch (error: any) {
@@ -79,8 +92,22 @@ export async function DELETE(
         });
 
         const deleted = await prisma.projectUpdate.delete({
-            where: { id }
+            where: { id },
+            include: {
+                project: {
+                    select: {
+                        slug: true
+                    }
+                }
+            }
         });
+
+        // Revalidate storefront pages displaying updates
+        revalidatePath("/");
+        revalidatePath("/projects");
+        if (deleted.project?.slug) {
+            revalidatePath(`/projects/${deleted.project.slug}`);
+        }
 
         return NextResponse.json({ success: true, data: deleted });
     } catch (error: any) {

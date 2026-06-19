@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/guards";
+import { revalidatePath } from "next/cache";
 
 // GET progress updates by project
 export async function GET(request: NextRequest) {
@@ -81,8 +82,20 @@ export async function POST(request: NextRequest) {
                     }
                 },
                 images: true,
+                project: {
+                    select: {
+                        slug: true
+                    }
+                }
             }
         });
+
+        // Revalidate storefront pages displaying updates
+        revalidatePath("/");
+        revalidatePath("/projects");
+        if (update.project?.slug) {
+            revalidatePath(`/projects/${update.project.slug}`);
+        }
 
         return NextResponse.json({ success: true, data: update }, { status: 201 });
     } catch (error: any) {

@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/guards";
+import { revalidatePath } from "next/cache";
 
 interface Params {
     id: string;
@@ -48,6 +49,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<Pa
             where: { id },
             data: body
         });
+
+        if (page.slug) {
+            if (page.slug === "home") {
+                revalidatePath("/");
+            } else {
+                revalidatePath(`/${page.slug}`);
+            }
+        }
+
         return NextResponse.json({ success: true, data: page });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: process.env.NODE_ENV === "development" ? error : "Internal Server Error" }, { status: 500 });
@@ -77,6 +87,15 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         const page = await prisma.page.delete({
             where: { id }
         });
+
+        if (page.slug) {
+            if (page.slug === "home") {
+                revalidatePath("/");
+            } else {
+                revalidatePath(`/${page.slug}`);
+            }
+        }
+
         return NextResponse.json({ success: true, data: page });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: process.env.NODE_ENV === "development" ? error : "Internal Server Error" }, { status: 500 });

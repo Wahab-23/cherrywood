@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/guards";
+import { revalidatePath } from "next/cache";
 
 interface Params {
     id: string;
@@ -56,8 +57,8 @@ export async function PUT(
         const updateData: any = { ...body };
         if (updateData.total_units !== undefined) {
             updateData.total_units = updateData.total_units !== null && updateData.total_units !== "" 
-                ? Number(updateData.total_units) 
-                : null;
+            ? Number(updateData.total_units) 
+            : null;
         }
         
         if (updateData.start_date !== undefined) {
@@ -72,6 +73,14 @@ export async function PUT(
             where: { id },
             data: updateData,
         });
+
+        // Revalidate storefront pages displaying project info
+        revalidatePath("/");
+        revalidatePath("/projects");
+        if (project.slug) {
+            revalidatePath(`/projects/${project.slug}`);
+        }
+
         return NextResponse.json({ success: true, data: project });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -90,6 +99,14 @@ export async function DELETE(
         const project = await prisma.project.delete({
             where: { id },
         });
+
+        // Revalidate storefront pages displaying project info
+        revalidatePath("/");
+        revalidatePath("/projects");
+        if (project.slug) {
+            revalidatePath(`/projects/${project.slug}`);
+        }
+
         return NextResponse.json({ success: true, data: project });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });

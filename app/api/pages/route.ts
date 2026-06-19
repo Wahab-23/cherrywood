@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission } from "@/lib/guards";
 import { COMPULSORY_SLUGS } from "@/lib/pageConstants";
+import { revalidatePath } from "next/cache";
 
 export async function GET() {
     try {
@@ -42,6 +43,15 @@ export async function POST(request: NextRequest) {
                 faqs
             }
         });
+
+        if (page.slug) {
+            if (page.slug === "home") {
+                revalidatePath("/");
+            } else {
+                revalidatePath(`/${page.slug}`);
+            }
+        }
+
         return NextResponse.json({ success: true, data: page }, { status: 201 });
     } catch (error: any) {
         if (error?.code === 'P2002') {
