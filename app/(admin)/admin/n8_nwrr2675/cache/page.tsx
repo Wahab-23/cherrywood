@@ -70,7 +70,7 @@ export default function CacheManagementPage() {
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/20">
+        <div className="w-16 h-16 rounded-2xl bg-linear-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/20">
           <Database className="w-9 h-9 text-white animate-pulse" />
         </div>
         <div>
@@ -81,11 +81,10 @@ export default function CacheManagementPage() {
 
       {/* Message feedback */}
       {message && (
-        <div className={`p-4 rounded-xl flex items-center gap-3 border ${
-          message.type === 'success' 
-            ? 'bg-emerald-50 border-emerald-100 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/30 dark:text-emerald-400' 
+        <div className={`p-4 rounded-xl flex items-center gap-3 border ${message.type === 'success'
+            ? 'bg-emerald-50 border-emerald-100 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/30 dark:text-emerald-400'
             : 'bg-rose-50 border-rose-100 text-rose-800 dark:bg-rose-950/20 dark:border-rose-900/30 dark:text-rose-400'
-        }`}>
+          }`}>
           {message.type === 'success' ? <CheckCircle className="w-5 h-5 shrink-0" /> : <ShieldAlert className="w-5 h-5 shrink-0" />}
           <p className="text-sm font-semibold">{message.text}</p>
         </div>
@@ -100,7 +99,7 @@ export default function CacheManagementPage() {
           { label: 'Inquiries Received', val: stats.inquiries, bg: 'from-emerald-500 to-teal-500' },
         ].map((s, idx) => (
           <Card key={idx} className="border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden relative group">
-            <div className={`absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r ${s.bg}`} />
+            <div className={`absolute top-0 left-0 w-full h-[3px] bg-linear-to-r ${s.bg}`} />
             <CardHeader className="p-5 pb-2">
               <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider">{s.label}</span>
             </CardHeader>
