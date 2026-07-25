@@ -3,10 +3,10 @@ import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "../generated/prisma/client";
 
 const adapter = new PrismaMariaDb({
-    host: process.env.DATABASE_HOST,
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
-    database: process.env.DATABASE_NAME,
+    host: process.env.DATABASE_HOST || process.env.PRODUCTION_DATABASE_HOST || "localhost",
+    user: process.env.DATABASE_USER || process.env.PRODUCTION_DATABASE_USER,
+    password: process.env.DATABASE_PASSWORD || process.env.PRODUCTION_DATABASE_PASSWORD,
+    database: process.env.DATABASE_NAME || process.env.PRODUCTION_DATABASE_NAME,
     connectionLimit: 5,
     allowPublicKeyRetrieval: true,
     collation: "utf8mb4_unicode_ci",

@@ -73,6 +73,15 @@ export default function UnitsPage() {
       if (statusFilter) url += `&status=${statusFilter}`
 
       const response = await fetch(url)
+      if (!response.ok) {
+        toast.error(`Failed to fetch units (${response.status})`)
+        return
+      }
+      const contentType = response.headers.get("content-type")
+      if (!contentType || !contentType.includes("application/json")) {
+        toast.error("Failed to fetch units: invalid response format")
+        return
+      }
       const data = await response.json()
       if (data.success) {
         setUnits(data.data)

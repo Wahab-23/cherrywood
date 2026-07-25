@@ -141,10 +141,23 @@ export default function ProjectDashboardPage() {
   const fetchUnits = async () => {
     setUnitsLoading(true)
     try {
-      const res = await fetch(`/api/unit?project_id=${id}&limit=100`)
+      const res = await fetch(`/api/unit?project_id=${id}&limit=10`)
+      if (!res.ok) {
+        console.error(`Failed to fetch units: status ${res.status}`)
+        toast.error(`Failed to fetch units (${res.status})`)
+        return
+      }
+      const contentType = res.headers.get("content-type")
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("Failed to fetch units: expected JSON response")
+        toast.error("Failed to fetch units: invalid response format")
+        return
+      }
       const data = await res.json()
       if (data.success) {
         setUnits(data.data)
+      } else {
+        toast.error(data.message || 'Failed to fetch units')
       }
     } catch (e) {
       console.error(e)

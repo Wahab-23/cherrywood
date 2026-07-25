@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/guards";
 import { revalidatePath } from "next/cache";
 
+export const dynamic = 'force-dynamic';
+
 interface Filter {
     search?: string;
     project_id?: string;
