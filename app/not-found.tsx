@@ -13,7 +13,7 @@ export default function NotFound() {
       />
       <div
         aria-hidden="true"
-        className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 text-[20vw] font-black uppercase text-white/[0.02] leading-none select-none hidden lg:block"
+        className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 text-[20vw] font-black uppercase text-white/2 leading-none select-none hidden lg:block"
       >
         404
       </div>
