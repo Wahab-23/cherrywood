@@ -1,1 +1,2 @@
-export { GET, PUT, DELETE, dynamic } from "@/app/api/unit/[id]/route";
+export const dynamic = 'force-dynamic';
+export { GET, PUT, DELETE } from "@/app/api/unit/[id]/route";
