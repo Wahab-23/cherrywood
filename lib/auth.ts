@@ -2,9 +2,11 @@ import jwt from "jsonwebtoken";
 import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 
+const JWT_SECRET = process.env.JWT_SECRET;
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.PRODUCTION_JWT_SECRET || "cherrywood_default_jwt_secret_key_2026";
-
+if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not defined");
+}
 
 export interface JWTPayload {
     userId: string;
