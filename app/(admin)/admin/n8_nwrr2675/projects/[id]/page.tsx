@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,7 +14,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import {
   ArrowLeft,
   Building,
-  Calendar,
   MapPin,
   Box,
   Activity,
@@ -23,15 +22,11 @@ import {
   Edit,
   Trash2,
   User,
-  Eye,
   Clock,
-  CheckCircle,
   Save,
   Image as ImageIcon,
-  Shield,
   Sparkles,
   Sliders,
-  DollarSign,
   Video
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -361,7 +356,7 @@ export default function ProjectDashboardPage() {
 
   if (projectLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[450px] gap-3">
+      <div className="flex flex-col items-center justify-center min-h-112.5 gap-3">
         <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-slate-400 font-bold text-sm">Loading Project Command Center...</p>
       </div>
