@@ -125,6 +125,7 @@ export function ContactForm({
             <select
               value={countryCode}
               onChange={(e) => setCountryCode(e.target.value)}
+              aria-label="Select country code"
               className={`bg-transparent pl-4 pr-7 py-3 text-sm focus:outline-none cursor-pointer appearance-none ${isDark ? 'text-white/80' : 'text-slate-800'
                 }`}
             >
