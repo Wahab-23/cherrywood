@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import { signToken } from "@/lib/auth";
 import { z } from "zod";
 
-import { authenticator } from "otplib";
+import { generateSecret } from "otplib";
 import { rateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
             }
 
             // Verify the provided 2FA code
-            const isValid2FA = authenticator.verify({
+            const isValid2FA = generateSecret.apply({
                 token: twoFactorCode,
                 secret: user.two_factor_secret,
             });

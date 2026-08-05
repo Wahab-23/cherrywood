@@ -78,7 +78,7 @@ export function Navbar() {
     >
       <div className={cn('w-full mx-auto px-6 md:px-12 lg:px-20 xl:px-28 transition-all duration-300 ease-in-out',
         isLightNav
-          ? 'max-w-[1536px]'
+          ? 'max-w-384'
           : ''
       )}>
         <div className="flex items-center justify-between py-2">
@@ -155,7 +155,7 @@ export function Navbar() {
             <button
               type="button"
               className={cn(
-                'md:hidden flex items-center justify-center min-w-[44px] min-h-[44px] transition-colors',
+                'md:hidden flex items-center justify-center min-w-11 min-h-11 transition-colors',
                 'touch-manipulation select-none',
                 isLightNav ? 'text-slate-800' : 'text-white'
               )}
@@ -186,7 +186,7 @@ export function Navbar() {
         className={cn(
           'md:hidden border-t transition-all duration-300 ease-in-out',
           mobileMenuOpen
-            ? 'max-h-[400px] opacity-100 visible bg-[#fcfbf8]/98 backdrop-blur-md border-neutral-200/40'
+            ? 'max-h-100 opacity-100 visible bg-[#fcfbf8]/98 backdrop-blur-md border-neutral-200/40'
             : 'max-h-0 opacity-0 invisible pointer-events-none border-transparent overflow-hidden'
         )}
       >

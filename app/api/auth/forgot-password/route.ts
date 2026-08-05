@@ -12,13 +12,13 @@ export async function POST(request: NextRequest) {
   if (!success) {
     return NextResponse.json(
       { error: 'Too many requests. Please try again later.' },
-      { 
-        status: 429, 
+      {
+        status: 429,
         headers: {
           'X-RateLimit-Limit': '3',
           'X-RateLimit-Remaining': remaining.toString(),
           'X-RateLimit-Reset': resetTime.toString()
-        } 
+        }
       }
     );
   }

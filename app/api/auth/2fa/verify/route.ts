@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { authenticator } from 'otplib';
+import { verify } from 'otplib';
 
 export async function POST(request: NextRequest) {
     const session = getSession(request);
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
             if (!secret) return NextResponse.json({ error: 'Secret is required to enable 2FA' }, { status: 400 });
 
             // Verify the token against the provided secret
-            const isValid = authenticator.verify({ token, secret });
+            const isValid = verify({ token, secret });
 
             if (!isValid) {
                 return NextResponse.json({ error: 'Invalid 2FA code' }, { status: 400 });
@@ -45,14 +45,14 @@ export async function POST(request: NextRequest) {
             });
 
             return NextResponse.json({ success: true, message: '2FA enabled successfully' });
-        } 
+        }
         else if (action === 'disable') {
             // Verify token against existing secret before disabling
             if (!user.two_factor_secret || !user.two_factor_enabled) {
                 return NextResponse.json({ error: '2FA is not enabled' }, { status: 400 });
             }
 
-            const isValid = authenticator.verify({ token, secret: user.two_factor_secret });
+            const isValid = verify({ token, secret: user.two_factor_secret });
 
             if (!isValid) {
                 return NextResponse.json({ error: 'Invalid 2FA code' }, { status: 400 });

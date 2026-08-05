@@ -1,0 +1,8 @@
+How to Write It Now (v13+)
+
+import { generateSecret, generate, verify, generateURI } from "otplib";
+
+const secret = generateSecret();
+const token = await generate({ secret });
+const result = await verify({ secret, token }); // returns object: { valid: true/false }
+const uri = generateURI({ issuer: "MyService", label: "user@example.com", secret });

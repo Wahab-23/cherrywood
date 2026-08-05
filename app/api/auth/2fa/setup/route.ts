@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { authenticator } from 'otplib';
+import { generateURI, generateSecret } from 'otplib';
 import QRCode from 'qrcode';
 
 export async function POST(request: NextRequest) {
@@ -21,11 +21,11 @@ export async function POST(request: NextRequest) {
         }
 
         // Generate a new secret
-        const secret = authenticator.generateSecret();
-        
+        const secret = generateSecret();
+
         // Generate otpauth URL for Google Authenticator / Authy
         const serviceName = 'Cherrywood Admin';
-        const otpauthUrl = authenticator.keyuri(user.email, serviceName, secret);
+        const otpauthUrl = generateURI({ issuer: serviceName, label: user.email, secret });
 
         // Generate QR code data URL
         const qrCodeUrl = await QRCode.toDataURL(otpauthUrl);
