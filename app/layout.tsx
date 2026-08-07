@@ -4,6 +4,7 @@ import "./globals.css";
 
 import { ThemeProvider } from "@/lib/theme-context";
 import { Toaster } from "@/components/ui/sonner";
+import { InstallPrompt } from "@/components/install-prompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +31,7 @@ const inter = Inter({
   weight: ["300", "400", "500", "600", "700", "800", "900"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywood.com'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cherrywoodbuilders.com'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -48,9 +49,9 @@ export const metadata: Metadata = {
     'luxury apartments',
     'real estate investment',
   ],
-  authors: [{ name: 'Cherrywood', url: siteUrl }],
-  creator: 'Cherrywood',
-  publisher: 'Cherrywood',
+  authors: [{ name: 'Cherrywoodbuilders', url: siteUrl }],
+  creator: 'Abdul Wahab',
+  publisher: 'JW&FA Group of Companies',
   robots: {
     index: true,
     follow: true,
@@ -100,6 +101,7 @@ export default function RootLayout({
           {children}
         </ThemeProvider>
         <Toaster />
+        <InstallPrompt />
       </body>
     </html>
   );
