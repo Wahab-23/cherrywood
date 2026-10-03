@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
         const filePath = path.join(uploadDir, uniqueName);
         await writeFile(filePath, buffer);
 
-        const url = `/uploads/${uploadPath}/${uniqueName}`;
+        const url = uploadPath ? `/uploads/${uploadPath}/${uniqueName}` : `/uploads/${uniqueName}`;
         return NextResponse.json({ url, filename: uniqueName }, { status: 201 });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });

@@ -283,15 +283,16 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                             >
                               <div
                                 className="relative w-full bg-white border border-neutral-100 overflow-hidden cursor-zoom-in group"
-                                aria-label="View floor plan"
+                                aria-label="View progress photo"
                                 role="button"
                                 tabIndex={0}
                               >
                                 <Image
                                   src={img.image_url}
-                                  alt="Update snapshot"
+                                  alt={update.title ? `${update.title} update photo` : "Update snapshot"}
                                   width={500}
                                   height={500}
+                                  unoptimized
                                   className="w-full h-32 md:h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                                 />
                               </div>

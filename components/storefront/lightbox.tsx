@@ -107,6 +107,7 @@ function LightboxModal({
                     src={images[current]}
                     alt={`Gallery image ${current + 1}`}
                     fill
+                    unoptimized
                     className="object-contain"
                     sizes="(max-width: 1280px) 90vw, 900px"
                     priority
@@ -152,6 +153,7 @@ function LightboxModal({
                                     src={img}
                                     alt=""
                                     fill
+                                    unoptimized
                                     className="object-cover"
                                     sizes="56px"
                                 />

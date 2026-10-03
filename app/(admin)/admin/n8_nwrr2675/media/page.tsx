@@ -301,6 +301,7 @@ export default function MediaPage() {
                         src={item.url!}
                         alt={item.name}
                         fill
+                        unoptimized
                         className="object-cover transition-transform duration-700 group-hover:scale-110"
                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
                       />
@@ -443,7 +444,7 @@ export default function MediaPage() {
 
             {deleteConfirm?.type === 'file' && (
               <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 shadow-inner mb-6">
-                <Image src={deleteConfirm.url!} alt="To delete" fill className="object-contain p-2" />
+                <Image src={deleteConfirm.url!} alt="To delete" fill unoptimized className="object-contain p-2" />
               </div>
             )}
 
