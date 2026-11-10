@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    staticGenerationMaxConcurrency: 1,
+  },
+
   // Normalize trailing slashes to prevent duplicate content
   trailingSlash: false,
 
