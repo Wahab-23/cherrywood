@@ -58,9 +58,9 @@
     "@types/react-dom": "^19.3.0",
     "eslint": "^10.14.0",
     "eslint-config-next": "16.4.6",
-    "prisma": "^8.0.0-rc.33",
+    "prisma": "^7.10.1",
     "tailwindcss": "^4.3.5",
     "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.3"
   }
 }
