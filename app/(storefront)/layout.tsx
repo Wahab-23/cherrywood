@@ -2,6 +2,9 @@ import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { Navbar } from "@/components/storefront/Navbar";
 import { Footer } from "@/components/storefront/Footer";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function StorefrontLayout({
     children,
 }: {
